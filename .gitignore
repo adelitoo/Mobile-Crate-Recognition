@@ -1,0 +1,111 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+
+# =========================
+# PYTHON (Backend - ML)
+# =========================
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+.venv/
+env/
+.env
+pip-log.txt
+
+# Dependency & Build Files
+*.egg-info/
+dist/
+build/
+
+# ML Datasets & Training Runs
+dataset/
+runs/
+
+# Model Weights & Checkpoints
+*.pt      # PyTorch model weights (including yolo11x.pt)
+*.onnx    # ONNX models
+*.tflite  # TensorFlow Lite models
+*.h5      # Keras models
+*.pb      # TensorFlow frozen graphs
+*.pkl     # Pickle files (model states, objects)
+*.ckpt    # TensorFlow/PyTorch checkpoints
+backend/yolo11x.pt
+
+# Logs & Temp Files
+*.log
+*.csv
+*.json
+*.yaml
+*.pkl
+*.npy
+*.npz
+*.tmp
+*.seed
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# =========================
+# GENERAL EXCLUSIONS
+# =========================
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor files
+.idea/
+.vscode/
+*.bak
+*.swp
+*.swo
+*.swn
+*.orig
