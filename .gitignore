@@ -18,9 +18,8 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
+# VS Code related
+# Uncomment this if you want to include VS Code settings
 #.vscode/
 
 # Flutter/Dart/Pub related
@@ -39,11 +38,10 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# Android Studio build artifacts
 /android/app/debug
 /android/app/profile
 /android/app/release
-
 
 # =========================
 # PYTHON (Backend - ML)
@@ -71,25 +69,29 @@ dataset/
 runs/
 
 # Model Weights & Checkpoints
-*.pt      # PyTorch model weights (including yolo11x.pt)
-*.onnx    # ONNX models
-*.tflite  # TensorFlow Lite models
-*.h5      # Keras models
-*.pb      # TensorFlow frozen graphs
-*.pkl     # Pickle files (model states, objects)
-*.ckpt    # TensorFlow/PyTorch checkpoints
-backend/yolo11x.pt
+*.pt
+# Exclude model weights except for your specific YOLO model
+!backend/yolo11x.pt
+*.onnx
+*.tflite
+*.h5
+*.pb
+*.pkl
+*.ckpt
 
 # Logs & Temp Files
 *.log
-*.csv
-*.json
-*.yaml
-*.pkl
-*.npy
-*.npz
 *.tmp
 *.seed
+
+# Selective data exclusion - Be careful with these
+# Some of your data files might be needed
+# *.csv
+# *.json
+# *.yaml
+# *.pkl
+# *.npy
+# *.npz
 
 # Jupyter Notebook Checkpoints
 .ipynb_checkpoints/
