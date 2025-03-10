@@ -70,8 +70,6 @@ runs/
 
 # Model Weights & Checkpoints
 *.pt
-# Exclude model weights except for your specific YOLO model
-!backend/yolo11x.pt
 *.onnx
 *.tflite
 *.h5
