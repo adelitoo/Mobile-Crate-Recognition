@@ -1,3 +1,5 @@
+import 'package:camera/camera.dart';
+import 'package:crate_app/camera_screen.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -26,7 +28,18 @@ class HomeScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () async {
+                  final cameras = await availableCameras();
+                  final firstCamera = cameras.first;
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => TakePictureScreen(camera: firstCamera),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue, // Background color
                   shape: RoundedRectangleBorder(

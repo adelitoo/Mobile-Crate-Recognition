@@ -69,7 +69,6 @@ dataset/
 runs/
 
 # Model Weights & Checkpoints
-*.pt
 *.onnx
 *.tflite
 *.h5
