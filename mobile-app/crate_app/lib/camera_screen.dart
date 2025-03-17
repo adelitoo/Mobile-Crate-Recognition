@@ -75,6 +75,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
           ),
         ],
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           try {
@@ -91,7 +92,13 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             print(e);
           }
         },
-        child: const Icon(Icons.camera_alt),
+        child: Image.asset(
+          'assets/images/icon/take_photo.png',
+          width: 800,
+          height: 800,
+        ),
+        backgroundColor: Colors.transparent, // Makes FAB background transparent
+        elevation: 0, // Removes shadow if desired      ),
       ),
     );
   }

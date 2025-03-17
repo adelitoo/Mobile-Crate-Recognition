@@ -50,6 +50,7 @@ flutter:
     - assets/images/
     - assets/images/icon/apple.png
     - assets/images/icon/google.png
+    - assets/images/icon/take_photo.png
 
   fonts:
     - family: SFPro

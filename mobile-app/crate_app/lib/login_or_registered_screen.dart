@@ -12,22 +12,33 @@ class LoginOrRegisteredScreen extends StatefulWidget {
 }
 
 class _LoginOrRegisteredScreenState extends State<LoginOrRegisteredScreen> {
-  // initally show login page
+  final PageController _pageController = PageController();
   bool showLoginPage = true;
 
-  // toggle between login and register page
   void togglePages() {
     setState(() {
       showLoginPage = !showLoginPage;
+      _pageController.animateToPage(
+        showLoginPage ? 0 : 1,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (showLoginPage) {
-      return LoginScreen(onTap: togglePages);
-    } else {
-      return RegisterScreen(onTap: togglePages);
-    }
+    return PageView(
+      controller: _pageController,
+      onPageChanged: (index) {
+        setState(() {
+          showLoginPage = index == 0;
+        });
+      },
+      children: [
+        LoginScreen(onTap: togglePages),
+        RegisterScreen(onTap: togglePages),
+      ],
+    );
   }
 }
