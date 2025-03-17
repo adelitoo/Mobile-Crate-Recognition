@@ -1,9 +1,16 @@
 import 'package:camera/camera.dart';
 import 'package:crate_app/camera_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  HomeScreen({super.key});
+
+  final user = FirebaseAuth.instance.currentUser;
+
+  void signUserOut() {
+    FirebaseAuth.instance.signOut();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +21,7 @@ class HomeScreen extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.fromLTRB(30, 70, 0, 0),
             child: Text(
-              'Home',
+              "Home",
               style: TextStyle(
                 fontFamily: 'SFPro',
                 fontSize: 42,
@@ -22,6 +29,32 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // Logout icon at top right corner
+          Positioned(
+            top: 75,
+            right: 30,
+            child: IconButton(
+              onPressed: signUserOut,
+              icon: const Icon(Icons.logout),
+              iconSize: 28,
+              color: Colors.black,
+            ),
+          ),
+
+          // Centered Username
+          Align(
+            alignment: Alignment.center,
+            child: Text(
+              "Logged in as \n${user?.displayName ?? user?.email ?? "User"}",
+              style: const TextStyle(
+                fontFamily: 'SFPro',
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
           // Centered Scan button at the bottom
           Align(
             alignment: Alignment.bottomCenter,

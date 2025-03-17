@@ -1,6 +1,6 @@
 name: crate_app
 description: "A new Flutter project."
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 version: 1.0.0+1
 
@@ -15,6 +15,8 @@ dependencies:
   camera: ^0.11.1
   path_provider: ^2.1.5
   path: ^1.9.1
+  firebase_core: ^3.12.1
+  firebase_auth: ^5.5.1
 
 dev_dependencies:
   flutter_test:
@@ -25,7 +27,7 @@ dev_dependencies:
 flutter_launcher_icons:
   ios: true
   image_path: "assets/images/icon/logo.png"
-  min_sdk_android: 21  # android min sdk min:16, default 21
+  min_sdk_android: 21 # android min sdk min:16, default 21
   android: true
   web:
     generate: true
@@ -45,6 +47,8 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/icon/apple.png
+    - assets/images/icon/google.png
 
   fonts:
     - family: SFPro
@@ -53,7 +57,7 @@ flutter:
         - asset: assets/fonts/SF-Pro-Text-Bold.otf
           weight: 700
         - asset: assets/fonts/SF-Pro-Text-Heavy.otf
-          weight: 900  
+          weight: 900
         - asset: assets/fonts/SF-Pro-Italic.ttf
           style: italic
         - asset: assets/fonts/SF-Pro-Text-BoldItalic.otf
@@ -93,7 +97,7 @@ flutter_native_splash:
   # To position the branding image at the bottom of the screen you can use bottom, bottomRight,
   # and bottomLeft. The default values is bottom if not specified or specified something else.
   #branding_mode: bottom
-  
+
   # Set the branding padding from the bottom of the screen.  The default value is 0
   # (Not supported on web yet)
   # branding_bottom_padding: 24
@@ -101,7 +105,7 @@ flutter_native_splash:
   # The color_dark, background_image_dark, image_dark, branding_dark are parameters that set the background
   # and image when the device is in dark mode. If they are not specified, the app will use the
   # parameters from above.  If there is no parameter above, the app will use the light mode values.
-  # If the image_dark parameter is specified, color_dark or background_image_dark must be specified.  
+  # If the image_dark parameter is specified, color_dark or background_image_dark must be specified.
   # color_dark and background_image_dark cannot both be set.
   #color_dark: "#042a49"
   #background_image_dark: "assets/dark-background.png"
@@ -118,7 +122,7 @@ flutter_native_splash:
     # App icon with an icon background: This should be 960×960 pixels, and fit within a circle
     # 640 pixels in diameter.
     # App icon without an icon background: This should be 1152×1152 pixels, and fit within a circle
-    # 768 pixels in diameter.  To fit a 1152x1152 image within a circle with a 768 diameter, simply 
+    # 768 pixels in diameter.  To fit a 1152x1152 image within a circle with a 768 diameter, simply
     # ensure that the most important design elements of your image are placed within a circular area
     # with a 768 diameter at the center of the 1152x1152 canvas.
     image: assets/images/splash/logo1.png
@@ -180,7 +184,7 @@ flutter_native_splash:
   # android_gravity can be one of the following Android Gravity (see
   # https://developer.android.com/reference/android/view/Gravity): bottom, center,
   # center_horizontal, center_vertical, clip_horizontal, clip_vertical, end, fill, fill_horizontal,
-  # fill_vertical, left, right, start, or top. android_gravity can be combined using the | operator to achieve multiple effects. 
+  # fill_vertical, left, right, start, or top. android_gravity can be combined using the | operator to achieve multiple effects.
   # For example:
   # `android_gravity: fill|clip_vertical` - This will fill the width while maintaining the image's vertical aspect ratio
   #android_gravity: center
