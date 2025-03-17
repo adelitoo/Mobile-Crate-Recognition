@@ -12,14 +12,16 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // text editing controllers
+  // Text editing controllers
   final emailController = TextEditingController();
-
   final passwordController = TextEditingController();
 
-  // sign user in method
+  // Error message to display
+  String errorMessage = '';
+
+  // Sign user in method
   void signUserIn() async {
-    // show loading circle
+    // Show loading circle
     showDialog(
       context: context,
       builder: (context) {
@@ -27,45 +29,29 @@ class _LoginScreenState extends State<LoginScreen> {
       },
     );
 
-    // try sign in
+    // Try sign in
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text,
         password: passwordController.text,
       );
-      // pop the loading circle
+      // Pop the loading circle
       Navigator.pop(context);
+      setState(() {
+        errorMessage = ''; // Clear error on successful login
+      });
     } on FirebaseAuthException catch (e) {
       Navigator.pop(context);
-      // wrong email
-      if (e.code == 'user-not-found') {
-        wrongEmailMessage();
-      }
-      // wrong password
-      else if (e.code == 'wrong-password') {
-        wrongPasswordMessage();
-      }
+      setState(() {
+        if (e.code == 'wrong-email') {
+          errorMessage = 'Incorrect Email';
+        } else if (e.code == 'wrong-password') {
+          errorMessage = 'Incorrect Password';
+        } else {
+          errorMessage = 'Invalid email or password';
+        }
+      });
     }
-  }
-
-  // wrong email message popup
-  void wrongEmailMessage() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return const AlertDialog(title: Text("Incorrect Email"));
-      },
-    );
-  }
-
-  // wrong password message popup
-  void wrongPasswordMessage() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return const AlertDialog(title: Text("Incorrect Password"));
-      },
-    );
   }
 
   @override
@@ -76,7 +62,6 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            // ✅ Wrap the Column
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -99,6 +84,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: 'Password',
                   obscureText: true,
                 ),
+                // Display error message below input fields
+                if (errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 25.0,
+                      vertical: 10.0,
+                    ),
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
