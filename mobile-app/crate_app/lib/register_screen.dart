@@ -5,24 +5,25 @@ import 'components/my_textfield.dart';
 import 'components/my_button.dart';
 import 'components/square_title.dart';
 
-class LoginScreen extends StatefulWidget {
+class RegisterScreen extends StatefulWidget {
   final Function()? onTap;
-  const LoginScreen({super.key, required this.onTap});
+  const RegisterScreen({super.key, required this.onTap});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   // Text editing controllers
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
   // Error message to display
   String errorMessage = '';
 
-  // Sign user in method
-  void signUserIn() async {
+  // Sign user up method
+  void signUserUp() async {
     // Show loading circle
     showDialog(
       context: context,
@@ -31,12 +32,22 @@ class _LoginScreenState extends State<LoginScreen> {
       },
     );
 
-    // Try sign in
+    // check if password not matches
+
+    if (passwordController.text != confirmPasswordController.text) {
+      Navigator.pop(context);
+      errorMessage = 'Passwords don\'t match';
+      return;
+    }
+
+    // Try creating the user
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
-      );
+      if (passwordController.text == confirmPasswordController.text) {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: emailController.text,
+          password: passwordController.text,
+        );
+      }
       // Pop the loading circle
       Navigator.pop(context);
       setState(() {
@@ -48,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (e.code == 'wrong-email') {
           errorMessage = 'Incorrect Email';
         } else if (e.code == 'wrong-password') {
-          errorMessage = 'Invalid email or password';
+          errorMessage = 'Incorrect Password';
         } else {
           errorMessage = 'Invalid email or password';
         }
@@ -67,11 +78,11 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 50),
+                const SizedBox(height: 25),
                 const Icon(Icons.lock, size: 100),
-                const SizedBox(height: 50),
+                const SizedBox(height: 25),
                 Text(
-                  'Welcome back you\'ve been missed!',
+                  'Let\'s create an account for you!',
                   style: TextStyle(color: Colors.grey[700], fontSize: 16),
                 ),
                 const SizedBox(height: 25),
@@ -86,6 +97,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: 'Password',
                   obscureText: true,
                 ),
+                const SizedBox(height: 10),
+
+                MyTextField(
+                  controller: confirmPasswordController,
+                  hintText: 'Confirm password',
+                  obscureText: true,
+                ),
+
                 // Display error message below input fields
                 if (errorMessage.isNotEmpty)
                   Padding(
@@ -104,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 const SizedBox(height: 10),
                 const SizedBox(height: 25),
-                MyButton(text: "Sign In", onTap: signUserIn),
+                MyButton(text: "Sign Up", onTap: signUserUp),
                 const SizedBox(height: 50),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
@@ -146,14 +165,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Not a member?',
+                      'Already have an account?',
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                     const SizedBox(width: 4),
                     GestureDetector(
                       onTap: widget.onTap,
                       child: const Text(
-                        'Register now',
+                        'Login now',
                         style: TextStyle(
                           color: Colors.blue,
                           fontWeight: FontWeight.bold,

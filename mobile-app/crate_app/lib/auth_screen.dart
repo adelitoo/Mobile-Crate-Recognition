@@ -1,5 +1,5 @@
 import 'package:crate_app/home_screen.dart';
-import 'package:crate_app/login_screen.dart';
+import 'package:crate_app/login_or_registered_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -18,7 +18,7 @@ class AuthScreen extends StatelessWidget {
           }
           // user is not logged it
           else {
-            return LoginScreen();
+            return LoginOrRegisteredScreen();
           }
         },
       ),
