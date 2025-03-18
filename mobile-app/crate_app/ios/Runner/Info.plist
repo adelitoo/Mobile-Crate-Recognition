@@ -13,10 +13,13 @@
 				<array>
 					<!-- TODO Replace this value: -->
 					<!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
-					<string>com.googleusercontent.apps.285017546439-s25etdi47lhljak1tqkblkqigfflc1u7</string>
+					<string>com.googleusercontent.apps.285017546439-pjli7acsc46bi0q3spliu99taqilc59l</string>
 				</array>
 			</dict>
 		</array>
+
+		<key>GIDClientID</key>
+		<string>285017546439-pjli7acsc46bi0q3spliu99taqilc59l.apps.googleusercontent.com</string>
 		<!-- End of the Google Sign-in Section -->
 		<key>NSCameraUsageDescription</key>
 		<string>Explanation on why the camera access is needed.</string>
