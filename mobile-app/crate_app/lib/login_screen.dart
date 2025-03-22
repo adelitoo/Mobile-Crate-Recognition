@@ -1,6 +1,7 @@
 import 'package:crate_app/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'components/my_textfield.dart';
 import 'components/my_button.dart';
 import 'components/square_title.dart';
@@ -67,9 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 50),
-                const Icon(Icons.lock, size: 100),
-                const SizedBox(height: 50),
+                const SizedBox(height: 25),
+                Lottie.asset('assets/images/animations/login.json'),
+                //const Icon(Icons.lock, size: 100),
+                const SizedBox(height: 25),
                 Text(
                   'Welcome back you\'ve been missed!',
                   style: TextStyle(color: Colors.grey[700], fontSize: 16),

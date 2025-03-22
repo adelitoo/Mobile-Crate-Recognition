@@ -1,6 +1,7 @@
 import 'package:crate_app/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'components/my_textfield.dart';
 import 'components/my_button.dart';
 import 'components/square_title.dart';
@@ -78,9 +79,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 25),
-                const Icon(Icons.lock, size: 100),
-                const SizedBox(height: 25),
+                //const SizedBox(height: 2),
+                Lottie.asset('assets/images/animations/login.json'),
+                //const Icon(Icons.lock, size: 100),
+                //const SizedBox(height: 2),
                 Text(
                   'Let\'s create an account for you!',
                   style: TextStyle(color: Colors.grey[700], fontSize: 16),

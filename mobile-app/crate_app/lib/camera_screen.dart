@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +14,32 @@ class TakePictureScreen extends StatefulWidget {
   // ???
   @override
   TakePictureScreenState createState() => TakePictureScreenState();
+}
+
+Future<void> sendImageToBackend(String imagePath, BuildContext context) async {
+  var request = http.MultipartRequest(
+    'POST',
+    Uri.parse('http://192.168.1.55:5000/upload'),
+  );
+
+  request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+
+  var response = await request.send();
+
+  if (response.statusCode == 200) {
+    final bytes = await response.stream.toBytes();
+    final tempFile = File('${imagePath}_processed.jpg');
+    await tempFile.writeAsBytes(bytes);
+
+    if (!context.mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DisplayPictureScreen(imagePath: tempFile.path),
+      ),
+    );
+  } else {
+    print("Failed to process image");
+  }
 }
 
 class TakePictureScreenState extends State<TakePictureScreen> {
@@ -81,13 +108,10 @@ class TakePictureScreenState extends State<TakePictureScreen> {
           try {
             await _initializeControllerFuture;
             final image = await _controller.takePicture();
+
             if (!context.mounted) return;
-            await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder:
-                    (context) => DisplayPictureScreen(imagePath: image.path),
-              ),
-            );
+
+            await sendImageToBackend(image.path, context);
           } catch (e) {
             print(e);
           }
