@@ -134,9 +134,23 @@ class DisplayPictureScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageFile = File(imagePath);
+
+    if (!imageFile.existsSync()) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Error')),
+        body: Center(child: Text('Error: Image not found at $imagePath')),
+      );
+    }
+
     return Scaffold(
-      // appBar: AppBar(title: const Text('Display the Picture')),
-      body: Image.file(File(imagePath)),
+      appBar: AppBar(title: const Text('Processed Image')),
+      body: Center(
+        child:
+            imageFile.existsSync()
+                ? Image.file(imageFile)
+                : CircularProgressIndicator(), // Show a loading spinner while the image loads
+      ),
     );
   }
 }

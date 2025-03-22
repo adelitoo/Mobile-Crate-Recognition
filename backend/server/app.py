@@ -7,14 +7,24 @@ app = Flask(__name__)
 CORS(app)  # Allow frontend to communicate with backend
 
 # Load YOLO model
-model_path = "runs/detect/train3/weights/best.pt"
+model_path = os.path.join(os.path.dirname(__file__), "..", "..", "yolo11x.pt")  # Use absolute path to model
 model = YOLO(model_path)
 
 # Ensure upload and output directories exist
-UPLOAD_FOLDER = "uploads"
-OUTPUT_FOLDER = "outputs"
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "..", "uploads")
+OUTPUT_FOLDER = os.path.join(os.path.dirname(__file__), "..", "outputs")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+
+def get_latest_prediction_folder(output_folder):
+    # Get all subdirectories in the 'predict' folder
+    subdirs = [d for d in os.listdir(output_folder) if os.path.isdir(os.path.join(output_folder, d)) and d.startswith('predict')]
+    
+    # Sort the directories and get the latest one (based on numeric value or timestamp)
+    subdirs.sort(reverse=True)  # Sort in reverse order to get the latest one
+    if subdirs:
+        return os.path.join(output_folder, subdirs[0])
+    return None
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -38,11 +48,16 @@ def upload_file():
         # Process image with YOLO
         results = model.predict(image_path, save=True, project=OUTPUT_FOLDER)
 
-        # Check if the processed image is saved correctly
-        processed_image_path = os.path.join(OUTPUT_FOLDER, "predict", file.filename)
+        # Get the most recent 'predict' folder
+        latest_predict_folder = get_latest_prediction_folder(OUTPUT_FOLDER)
+        if not latest_predict_folder:
+            return jsonify({'error': 'Processing failed, no prediction folder found'}), 500
+
+        # Check if the processed image exists in the latest prediction folder
+        processed_image_path = os.path.join(latest_predict_folder, file.filename)
 
         if not os.path.exists(processed_image_path):
-            return jsonify({'error': 'Processing failed, image not found'}), 500
+            return jsonify({'error': 'Processing failed, image not found in prediction folder'}), 500
 
         # Return the processed image to the client
         return send_file(processed_image_path, mimetype='image/jpeg')
