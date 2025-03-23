@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,13 +14,36 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final LatLng currentLocation = LatLng(46.0100800, 8.9600400);
+  LatLng? currentLocation;
   late GoogleMapController _mapController;
-  Map<String, Marker> _markers = {};
+  final Map<String, Marker> _markers = {};
   final user = FirebaseAuth.instance.currentUser;
 
   void signUserOut() {
     FirebaseAuth.instance.signOut();
+  }
+
+  Future<void> getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+    setState(() {
+      currentLocation = LatLng(position.latitude, position.longitude);
+    });
+
+    if (_mapController != null) {
+      _mapController.animateCamera(
+        CameraUpdate.newLatLngZoom(currentLocation!, 14),
+      );
+    }
+
+    addMarker('currentLocation', currentLocation!);
   }
 
   void addMarker(String markerId, LatLng location) async {
@@ -46,10 +70,11 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
-        statusBarColor: Colors.black, // Makes status bar black
-        statusBarIconBrightness: Brightness.light, // Ensures icons stay white
+        statusBarColor: Colors.black,
+        statusBarIconBrightness: Brightness.light,
       ),
     );
+    getCurrentLocation();
   }
 
   @override
@@ -57,20 +82,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: Stack(
         children: <Widget>[
-          // Title at top left corner
           const Padding(
             padding: EdgeInsets.fromLTRB(30, 70, 0, 0),
             child: Text(
-              "Home",
+              "Home🏠",
               style: TextStyle(
                 fontFamily: 'SFPro',
                 fontSize: 42,
                 fontWeight: FontWeight.w900,
+                letterSpacing: -0.9,
               ),
             ),
           ),
-
-          // Logout icon at top right corner
           Positioned(
             top: 75,
             right: 30,
@@ -82,7 +105,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // User Info Card (iPhone widget style)
           Positioned(
             top: 140,
             left: 30,
@@ -94,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Color.fromARGB(255, 172, 170, 170).withValues(),
                     blurRadius: 10,
                     spreadRadius: 2,
                     offset: const Offset(0, 5),
@@ -140,18 +162,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-
           Positioned(
             top: 260,
             left: 30,
             right: 30,
             child: Container(
-              height: 550, // Set a specific height
+              height: 550,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color:
+                        const Color.fromARGB(255, 172, 170, 170).withValues(),
                     blurRadius: 10,
                     spreadRadius: 2,
                     offset: const Offset(0, 5),
@@ -162,57 +184,76 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(20),
                 child: GoogleMap(
                   initialCameraPosition: CameraPosition(
-                    target: currentLocation,
+                    target: currentLocation ?? LatLng(46.0100800, 8.9600400),
                     zoom: 14,
                   ),
                   onMapCreated: (controller) {
                     _mapController = controller;
-                    addMarker('test', currentLocation);
+                    if (currentLocation != null) {
+                      addMarker('currentLocation', currentLocation!);
+                    }
                   },
                   markers: _markers.values.toSet(),
                 ),
               ),
             ),
           ),
-
-          // Centered Scan button at the bottom
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
-              child: ElevatedButton(
-                onPressed: () async {
-                  final cameras = await availableCameras();
-                  final firstCamera = cameras.first;
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => TakePictureScreen(camera: firstCamera),
+              child: Container(
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.3),
+                      spreadRadius: 1,
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue, // Background color
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      30.0,
-                    ), // Rounded corners
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 50,
-                    vertical: 15,
-                  ), // Button size
-                  elevation: 5, // Subtle shadow
+                  ],
                 ),
-                child: const Text(
-                  'Scan',
-                  style: TextStyle(
-                    fontFamily: 'SFPro',
-                    color: Colors.white, // Text color
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final cameras = await availableCameras();
+                    final firstCamera = cameras.first;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => TakePictureScreen(camera: firstCamera),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 50,
+                      vertical: 16,
+                    ),
+                    elevation: 0,
+                    minimumSize: const Size(200, 55),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.camera_alt_rounded, size: 20),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Scan',
+                        style: TextStyle(
+                          fontFamily: 'SFPro',
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

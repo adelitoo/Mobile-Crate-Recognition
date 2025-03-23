@@ -63,13 +63,33 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+        leading: Padding(
+          padding: const EdgeInsets.only(
+            left: 20,
+            top: 10,
+          ), // Adjust padding to move right and down
+          child: Container(
+            width: 50, // Fixed width for the circle
+            height: 50, // Fixed height for the circle
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black.withOpacity(
+                0.6,
+              ), // Semi-transparent black background
+            ),
+            child: Center(
+              child: IconButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                iconSize: 24, // Adjust icon size if needed
+              ),
+            ),
+          ),
         ),
       ),
+
       body: Stack(
         children: [
           Positioned.fill(
