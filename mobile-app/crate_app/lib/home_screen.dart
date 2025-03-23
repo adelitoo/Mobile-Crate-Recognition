@@ -3,6 +3,7 @@ import 'package:crate_app/camera_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,10 +13,32 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final LatLng currentLocation = LatLng(46.0100800, 8.9600400);
+  late GoogleMapController _mapController;
+  Map<String, Marker> _markers = {};
   final user = FirebaseAuth.instance.currentUser;
 
   void signUserOut() {
     FirebaseAuth.instance.signOut();
+  }
+
+  void addMarker(String markerId, LatLng location) async {
+    var markerIcon = await BitmapDescriptor.asset(
+      const ImageConfiguration(),
+      'assets/images/icon/truck.png',
+    );
+
+    var marker = Marker(
+      markerId: MarkerId(markerId),
+      position: location,
+      infoWindow: const InfoWindow(
+        title: 'You',
+        snippet: 'This is your current location',
+      ),
+      icon: markerIcon,
+    );
+    _markers[markerId] = marker;
+    setState(() {});
   }
 
   @override
@@ -59,15 +82,95 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Centered Username
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              "Logged in as \n${user?.displayName ?? user?.email ?? "User"}",
-              style: const TextStyle(
-                fontFamily: 'SFPro',
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
+          // User Info Card (iPhone widget style)
+          Positioned(
+            top: 140,
+            left: 30,
+            right: 30,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundImage:
+                        user?.photoURL != null
+                            ? NetworkImage(user!.photoURL!)
+                            : const AssetImage(
+                                  'assets/images/icon/default_user.png',
+                                )
+                                as ImageProvider,
+                    backgroundColor: Colors.white,
+                  ),
+                  const SizedBox(width: 15),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user?.displayName ?? user?.email ?? "User",
+                        style: const TextStyle(
+                          fontFamily: 'SFPro',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Text(
+                        "Welcome back!",
+                        style: TextStyle(
+                          fontFamily: 'SFPro',
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          Positioned(
+            top: 260,
+            left: 30,
+            right: 30,
+            child: Container(
+              height: 550, // Set a specific height
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: currentLocation,
+                    zoom: 14,
+                  ),
+                  onMapCreated: (controller) {
+                    _mapController = controller;
+                    addMarker('test', currentLocation);
+                  },
+                  markers: _markers.values.toSet(),
+                ),
               ),
             ),
           ),

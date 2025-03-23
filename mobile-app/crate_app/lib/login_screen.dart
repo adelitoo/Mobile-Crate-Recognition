@@ -68,10 +68,13 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 25),
-                Lottie.asset('assets/images/animations/login.json'),
+                //const SizedBox(height: 25),
+                Lottie.asset(
+                  'assets/images/animations/login1.json',
+                  width: 200,
+                ),
                 //const Icon(Icons.lock, size: 100),
-                const SizedBox(height: 25),
+                //const SizedBox(height: 25),
                 Text(
                   'Welcome back you\'ve been missed!',
                   style: TextStyle(color: Colors.grey[700], fontSize: 16),

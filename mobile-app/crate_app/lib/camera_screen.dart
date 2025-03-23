@@ -4,14 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
-// New screen that can change over time (hence, StatefulWidget)
 class TakePictureScreen extends StatefulWidget {
-  // Constructor that takes as a parameter the camera and is mandatory
   const TakePictureScreen({super.key, required this.camera});
-  // Stores the camera, either front or back
   final CameraDescription camera;
 
-  // ???
   @override
   TakePictureScreenState createState() => TakePictureScreenState();
 }
@@ -43,47 +39,35 @@ Future<void> sendImageToBackend(String imagePath, BuildContext context) async {
 }
 
 class TakePictureScreenState extends State<TakePictureScreen> {
-  // Camera controller -> turning it on, taking pics, etc ...
   late CameraController _controller;
-  // Stores the camaera init process
   late Future<void> _initializeControllerFuture;
+  bool _isProcessing = false; // To track if image is being processed
 
-  // Function called as soon as the page loads
   @override
   void initState() {
-    // Good practice
     super.initState();
-    // Connect the camera to the controller
     _controller = CameraController(widget.camera, ResolutionPreset.veryHigh);
-    // Starts the camera and stores the result
     _initializeControllerFuture = _controller.initialize();
   }
 
-  // Called when the screen is removed
   @override
   void dispose() {
-    // Frees up the camera so other apps can use it
     _controller.dispose();
-    // Good practice
     super.dispose();
   }
 
-  // Builds the screen UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true, // Allows the AppBar to overlay the camera
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // Makes the AppBar transparent
-        elevation: 0, // Removes shadow
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
           onPressed: () {
             Navigator.of(context).pop();
           },
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.white,
-          ), // Ensures visibility
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
       ),
       body: Stack(
@@ -100,12 +84,20 @@ class TakePictureScreenState extends State<TakePictureScreen> {
               },
             ),
           ),
+          if (_isProcessing)
+            const Center(
+              child: CircularProgressIndicator(),
+            ), // Show loading circle when processing
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           try {
+            setState(() {
+              _isProcessing = true; // Start processing
+            });
+
             await _initializeControllerFuture;
             final image = await _controller.takePicture();
 
@@ -114,6 +106,10 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             await sendImageToBackend(image.path, context);
           } catch (e) {
             print(e);
+          } finally {
+            setState(() {
+              _isProcessing = false; // Stop processing when done
+            });
           }
         },
         child: Image.asset(
@@ -121,8 +117,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
           width: 800,
           height: 800,
         ),
-        backgroundColor: Colors.transparent, // Makes FAB background transparent
-        elevation: 0, // Removes shadow if desired      ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
     );
   }
@@ -149,7 +145,7 @@ class DisplayPictureScreen extends StatelessWidget {
         child:
             imageFile.existsSync()
                 ? Image.file(imageFile)
-                : CircularProgressIndicator(), // Show a loading spinner while the image loads
+                : const CircularProgressIndicator(), // Show a loading spinner while the image loads
       ),
     );
   }

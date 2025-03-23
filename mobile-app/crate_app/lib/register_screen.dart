@@ -80,7 +80,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 //const SizedBox(height: 2),
-                Lottie.asset('assets/images/animations/login.json'),
+                Lottie.asset(
+                  'assets/images/animations/login1.json',
+                  width: 200,
+                ),
                 //const Icon(Icons.lock, size: 100),
                 //const SizedBox(height: 2),
                 Text(

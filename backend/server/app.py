@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app)  # Allow frontend to communicate with backend
 
 # Load YOLO model
-model_path = os.path.join(os.path.dirname(__file__), "..", "..", "yolo11x.pt")  # Use absolute path to model
+model_path = "../runs/detect/train3/weights/best.pt" 
 model = YOLO(model_path)
 
 # Ensure upload and output directories exist
