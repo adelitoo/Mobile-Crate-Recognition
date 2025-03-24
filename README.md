@@ -1,2 +1,0 @@
-# Image-recognition-from-mobile-phone-EXTERNAL-COMPANY
-A Ticino-based beverage distributor aims to automate crate counting via mobile image recognition. Currently, manual counting is slow and error-prone. The project involves dataset creation, model training (YOLO, SSD, MobileNet), and integration into a mobile app using TensorFlow Lite or PyTorch Mobile, with result storage on-device or in the cloud.
