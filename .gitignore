@@ -108,3 +108,6 @@ Thumbs.db
 *.swo
 *.swn
 *.orig
+
+backend/uploads
+backend/outputs

@@ -4,7 +4,7 @@ import os
 from ultralytics import YOLO
 
 app = Flask(__name__)
-CORS(app)  # Allow frontend to communicate with backend
+CORS(app, expose_headers=['Crate-Count', 'Keg-Count'])  # Expose custom headers
 
 # Load YOLO model
 model_path = "../runs/detect/train3/weights/best.pt" 
@@ -48,6 +48,28 @@ def upload_file():
         # Process image with YOLO
         results = model.predict(image_path, save=True, project=OUTPUT_FOLDER)
 
+        crate_count = 0
+        keg_count = 0
+
+        print("Detected classes:")
+
+        # Count detected crates and kegs
+        # counts = {'crate': 0, 'keg': 0}
+        for result in results:
+            for box in result.boxes:
+                cls_id = int(box.cls)
+                cls_name = model.names[cls_id]
+                print(f"Detected class: {cls_name}")
+                
+                # Check if class name contains keywords for categorization
+                if 'rectangle' in cls_name.lower() or 'cp' in cls_name.lower():
+                    crate_count += 1
+                elif 'keg' in cls_name.lower():
+                    keg_count += 1
+        print(f"Counted crates: {crate_count}, kegs: {keg_count}")
+
+
+        # Get the processed image path (existing code)...
         # Get the most recent 'predict' folder
         latest_predict_folder = get_latest_prediction_folder(OUTPUT_FOLDER)
         if not latest_predict_folder:
@@ -59,8 +81,16 @@ def upload_file():
         if not os.path.exists(processed_image_path):
             return jsonify({'error': 'Processing failed, image not found in prediction folder'}), 500
 
-        # Return the processed image to the client
-        return send_file(processed_image_path, mimetype='image/jpeg')
+
+        # Create response with the processed image
+        response = send_file(processed_image_path, mimetype='image/jpeg')
+        # Add detection counts to headers
+        response.headers['Crate-Count'] = str(crate_count)
+        response.headers['Keg-Count'] = str(keg_count)
+        print(f"Response headers: ${response.headers}");
+        print(f"Crate count: ${response.headers['crate-count']}");
+        print(f"Keg count: ${response.headers['keg-count']}");
+        return response
 
     except Exception as e:
         print(f"Error during processing: {e}")

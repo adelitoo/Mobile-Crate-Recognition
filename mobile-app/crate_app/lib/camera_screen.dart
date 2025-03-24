@@ -20,21 +20,33 @@ Future<void> sendImageToBackend(String imagePath, BuildContext context) async {
 
   request.files.add(await http.MultipartFile.fromPath('image', imagePath));
 
-  var response = await request.send();
+  var streamedResponse = await request.send();
 
-  if (response.statusCode == 200) {
-    final bytes = await response.stream.toBytes();
+  if (streamedResponse.statusCode == 200) {
+    // Get a regular http.Response from the streamed response
+    final response = await http.Response.fromStream(streamedResponse);
+
+    // Now you can access headers correctly
+    final crateCount = response.headers['crate-count'] ?? '0';
+    final kegCount = response.headers['keg-count'] ?? '0';
+
+    // Save the image
     final tempFile = File('${imagePath}_processed.jpg');
-    await tempFile.writeAsBytes(bytes);
+    await tempFile.writeAsBytes(response.bodyBytes);
 
     if (!context.mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => DisplayPictureScreen(imagePath: tempFile.path),
+        builder:
+            (context) => DisplayPictureScreen(
+              imagePath: tempFile.path,
+              crateCount: crateCount,
+              kegCount: kegCount,
+            ),
       ),
     );
   } else {
-    print("Failed to process image");
+    print("Failed to process image: ${streamedResponse.statusCode}");
   }
 }
 
@@ -146,26 +158,46 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
 class DisplayPictureScreen extends StatelessWidget {
   final String imagePath;
-  const DisplayPictureScreen({super.key, required this.imagePath});
+  final String crateCount;
+  final String kegCount;
+
+  const DisplayPictureScreen({
+    super.key,
+    required this.imagePath,
+    required this.crateCount,
+    required this.kegCount,
+  });
 
   @override
   Widget build(BuildContext context) {
     final imageFile = File(imagePath);
 
-    if (!imageFile.existsSync()) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Error')),
-        body: Center(child: Text('Error: Image not found at $imagePath')),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(title: const Text('Processed Image')),
-      body: Center(
-        child:
-            imageFile.existsSync()
-                ? Image.file(imageFile)
-                : const CircularProgressIndicator(), // Show a loading spinner while the image loads
+      body: Column(
+        children: [
+          Expanded(
+            child:
+                imageFile.existsSync()
+                    ? Image.file(imageFile)
+                    : const CircularProgressIndicator(),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Text(
+                  'Crates Detected: $crateCount',
+                  style: TextStyle(fontSize: 20),
+                ),
+                Text(
+                  'Kegs Detected: $kegCount',
+                  style: TextStyle(fontSize: 20),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
