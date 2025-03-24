@@ -51,6 +51,9 @@ def upload_file():
         crate_count = 0
         keg_count = 0
 
+        # Track counts by specific type
+        item_counts = {}
+
         print("Detected classes:")
 
         # Count detected crates and kegs
@@ -59,14 +62,26 @@ def upload_file():
             for box in result.boxes:
                 cls_id = int(box.cls)
                 cls_name = model.names[cls_id]
-                print(f"Detected class: {cls_name}")
                 
-                # Check if class name contains keywords for categorization
-                if 'rectangle' in cls_name.lower() or 'cp' in cls_name.lower():
-                    crate_count += 1
-                elif 'keg' in cls_name.lower():
-                    keg_count += 1
-        print(f"Counted crates: {crate_count}, kegs: {keg_count}")
+                # Format the display name (convert from model class name to user-friendly name)
+                display_name = cls_name
+                
+                # Example transformations for better display names
+                if "lightblue_cp_rectangle_perrier" in cls_name:
+                    display_name = "Perrier"
+                elif "lightblue_rectangle_sanclemente" in cls_name:
+                    display_name = "San Clemente"
+                elif "lightblue_rectangle_valsers" in cls_name:
+                    display_name = "Valsers"
+                # Add more mappings as needed for your specific classes
+                
+                # Increment the count for this type
+                if display_name in item_counts:
+                    item_counts[display_name] += 1
+                else:
+                    item_counts[display_name] = 1
+        
+        print(f"Counted items by type: {item_counts}")
 
 
         # Get the processed image path (existing code)...
@@ -90,8 +105,14 @@ def upload_file():
         print(f"Response headers: ${response.headers}");
         print(f"Crate count: ${response.headers['crate-count']}");
         print(f"Keg count: ${response.headers['keg-count']}");
+        # Create response with the processed image
+        response = send_file(processed_image_path, mimetype='image/jpeg')
+        
+        # Convert the counts dictionary to JSON and add it as a header
+        import json
+        response.headers['Item-Counts'] = json.dumps(item_counts)
+        
         return response
-
     except Exception as e:
         print(f"Error during processing: {e}")
         return jsonify({'error': 'Error processing the image'}), 500

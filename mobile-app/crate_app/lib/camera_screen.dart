@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:camera/camera.dart';
@@ -26,9 +27,20 @@ Future<void> sendImageToBackend(String imagePath, BuildContext context) async {
     // Get a regular http.Response from the streamed response
     final response = await http.Response.fromStream(streamedResponse);
 
-    // Now you can access headers correctly
-    final crateCount = response.headers['crate-count'] ?? '0';
-    final kegCount = response.headers['keg-count'] ?? '0';
+    // Print all headers to debug
+    print("All response headers: ${response.headers}");
+
+    // Get the JSON string from the header
+    final itemCountsJson = response.headers['item-counts'] ?? '{}';
+    print("Item counts JSON: $itemCountsJson");
+
+    // Parse the JSON string to a Map
+    Map<String, dynamic> itemCounts = {};
+    try {
+      itemCounts = Map<String, dynamic>.from(json.decode(itemCountsJson));
+    } catch (e) {
+      print("Error parsing item counts: $e");
+    }
 
     // Save the image
     final tempFile = File('${imagePath}_processed.jpg');
@@ -40,8 +52,7 @@ Future<void> sendImageToBackend(String imagePath, BuildContext context) async {
         builder:
             (context) => DisplayPictureScreen(
               imagePath: tempFile.path,
-              crateCount: crateCount,
-              kegCount: kegCount,
+              itemCounts: itemCounts,
             ),
       ),
     );
@@ -158,14 +169,12 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
 class DisplayPictureScreen extends StatelessWidget {
   final String imagePath;
-  final String crateCount;
-  final String kegCount;
+  final Map<String, dynamic> itemCounts;
 
   const DisplayPictureScreen({
     super.key,
     required this.imagePath,
-    required this.crateCount,
-    required this.kegCount,
+    required this.itemCounts,
   });
 
   @override
@@ -185,14 +194,25 @@ class DisplayPictureScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Crates Detected: $crateCount',
-                  style: TextStyle(fontSize: 20),
+                  'Detected Items:',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
-                Text(
-                  'Kegs Detected: $kegCount',
-                  style: TextStyle(fontSize: 20),
+                const SizedBox(height: 8),
+                // If no items detected
+                if (itemCounts.isEmpty)
+                  Text('No items detected', style: TextStyle(fontSize: 18)),
+                // Display each item and its count
+                ...itemCounts.entries.map(
+                  (entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Text(
+                      '${entry.key}: ${entry.value}',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  ),
                 ),
               ],
             ),
