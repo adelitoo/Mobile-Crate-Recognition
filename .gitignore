@@ -1,0 +1,113 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code related
+# Uncomment this if you want to include VS Code settings
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/f
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio build artifacts
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# =========================
+# PYTHON (Backend - ML)
+# =========================
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+.venv/
+env/
+.env
+pip-log.txt
+
+# Dependency & Build Files
+*.egg-info/
+dist/
+build/
+
+# ML Datasets & Training Runs
+dataset/
+runs/
+
+# Model Weights & Checkpoints
+*.onnx
+*.tflite
+*.h5
+*.pb
+*.pkl
+*.ckpt
+
+# Logs & Temp Files
+*.log
+*.tmp
+*.seed
+
+# Selective data exclusion - Be careful with these
+# Some of your data files might be needed
+# *.csv
+# *.json
+# *.yaml
+# *.pkl
+# *.npy
+# *.npz
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# =========================
+# GENERAL EXCLUSIONS
+# =========================
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor files
+.idea/
+.vscode/
+*.bak
+*.swp
+*.swo
+*.swn
+*.orig
+
+backend/uploads
+backend/outputs
