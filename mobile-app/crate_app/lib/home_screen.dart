@@ -37,11 +37,9 @@ class _HomeScreenState extends State<HomeScreen> {
       currentLocation = LatLng(position.latitude, position.longitude);
     });
 
-    if (_mapController != null) {
-      _mapController.animateCamera(
-        CameraUpdate.newLatLngZoom(currentLocation!, 14),
-      );
-    }
+    _mapController.animateCamera(
+      CameraUpdate.newLatLngZoom(currentLocation!, 14),
+    );
 
     addMarker('currentLocation', currentLocation!);
   }
