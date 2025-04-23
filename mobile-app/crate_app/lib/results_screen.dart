@@ -23,7 +23,7 @@ class DisplayPictureScreen extends StatefulWidget {
 Future<void> sendImageToBackend(String imagePath, BuildContext context) async {
   var request = http.MultipartRequest(
     'POST',
-    Uri.parse('http://169.254.195.4:5000/upload'),
+    Uri.parse('http://192.168.1.125:5000/upload'),
   );
 
   request.files.add(await http.MultipartFile.fromPath('image', imagePath));
@@ -451,6 +451,9 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                           SizedBox(height: 20),
                           Expanded(
                             child: ListView.builder(
+                              padding: EdgeInsets.only(
+                                bottom: counts.isNotEmpty ? 130 : 0,
+                              ),
                               itemCount: counts.length,
                               itemBuilder: (context, index) {
                                 final entry = counts.entries.elementAt(index);
