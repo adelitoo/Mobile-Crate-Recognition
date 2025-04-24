@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'services/pdf_generator.dart'; // Import the PDF generator service
 
 class DisplayPictureScreen extends StatefulWidget {
   final String imagePath;
@@ -71,37 +72,8 @@ Future<void> sendImageToBackend(String imagePath, BuildContext context) async {
 class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
   late Map<String, int> counts;
 
-  // Brand colors for common beverages
-  /*final Map<String, Color> brandColors = {
-    'Perrier': Color(0xFF85C441),
-    'San Clemente': Color(0xFF00A3E0),
-    'Valser': Color(0xFF0078C1),
-    'Coca Cola': Color(0xFFE61A27),
-    'Pepsi': Color(0xFF005CB4),
-    'Sprite': Color(0xFF008B47),
-    'Evian': Color(0xFFFF85AB),
-    'San Pellegrino': Color(0xFFE71B2A),
-    'Fusto di birra': Color(0xFF8B4513), // Brown (kegs)
-    'Chopfab Doppelleu': Color(0xFF1C1C1C), // Dark Gray
-    'Epti': Color(0xFF1C1C1C), // Dark Gray
-    'Feldschlösschen Bier': Color(0xFF0033A0), // Deep Blue
-    'Gazzose': Color(0xFF0096FF), // Light Blue
-    'Hacker-Pschorr': Color(0xFF0050A1), // Dark Blue
-    'Henniez': Color(0xFF1E90FF), // Bright Blue
-    'Appenzeller Bier': Color(0xFF964B00), // Dark Brown
-    'Pomd\'or Suisse': Color(0xFF4CAF50), // Green
-    'Michel': Color(0xFFD32F2F), // Dark Red
-    'Cassa rossa': Color(0xFFFF0000), // Red
-    'Drinks': Color(0xFFD32F2F), // Dark Red
-    'Rivella': Color(0xFFFF4500), // Orange-Red
-    'Bottiglia d\'acqua': Color(0xFF87CEEB), // Light Blue
-    'Schweppes': Color(0xFFFFD700), // Yellow
-    'Acqua Panna': Color(0xFFFFD700), // Yellow (same as Schweppes)
-  };
-
-  Color getBrandColor(String brand) {
-    return brandColors[brand] ?? Colors.blueGrey;
-  }*/
+  // Instance of our PDF generator service
+  final PdfGeneratorService _pdfGenerator = PdfGeneratorService();
 
   @override
   void initState() {
@@ -195,6 +167,46 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
         builder: (context) => FullScreenImageView(imageFile: imageFile),
       ),
     );
+  }
+
+  // Generate PDF invoice and then navigate to home only if successful
+  Future<void> _generateInvoiceAndGoHome() async {
+    // Convert counts map to the format expected by PDF generator
+    final List<Map<String, dynamic>> itemsList =
+        counts.entries.map((entry) {
+          return {'name': entry.key, 'count': entry.value};
+        }).toList();
+
+    // Generate and save the PDF, get the result status
+    final bool success = await _pdfGenerator.generateAndSavePdf(
+      imagePath: widget.imagePath,
+      items: itemsList,
+      context: context,
+    );
+
+    // If not mounted anymore, exit
+    if (!mounted) return;
+
+    // Only proceed with success message and navigation if PDF was created successfully
+    if (success) {
+      // Show a confirmation message with styling matching the other SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invoice generated successfully!'),
+          backgroundColor: CupertinoColors.activeGreen,
+        ),
+      );
+
+      // Navigate to home page (clearing all previous routes)
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('PDF saving interrupted!'),
+          backgroundColor: CupertinoColors.activeOrange,
+        ),
+      );
+    }
   }
 
   // Add this function to return the emoji based on the entry.key
@@ -659,13 +671,13 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
           if (counts.isNotEmpty) ...[
             Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(50), // Smooth rounded edges
+                borderRadius: BorderRadius.circular(50),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.15),
                     blurRadius: 10,
                     spreadRadius: 2,
-                    offset: Offset(0, 4), // Soft shadow for depth
+                    offset: Offset(0, 4),
                   ),
                 ],
               ),
@@ -676,16 +688,13 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(50),
                 ),
-                child: Icon(
-                  Icons.add,
-                  color: Colors.white,
-                  size: 24, // Slightly larger for better visibility
-                ),
+                child: Icon(Icons.add, color: Colors.white, size: 24),
               ),
             ),
-            SizedBox(height: 10), // Space between buttons
+            SizedBox(height: 10),
+            // Generate Invoice button
             Container(
-              width: 180, // Makes it more button-like instead of a wide FAB
+              width: 180,
               height: 50,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(25),
@@ -699,27 +708,26 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                 ],
               ),
               child: FloatingActionButton.extended(
-                heroTag: 'saveItems',
+                heroTag: 'generateInvoice',
                 onPressed: () {
-                  Navigator.pop(context, counts);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Counts saved successfully!'),
-                      backgroundColor: CupertinoColors.activeGreen,
-                    ),
-                  );
+                  _generateInvoiceAndGoHome();
                 },
                 label: Text(
-                  'Save',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  'Generate Invoice',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-                icon: Icon(Icons.save, size: 22),
+                icon: Icon(Icons.receipt_long, size: 22, color: Colors.white),
                 backgroundColor: CupertinoColors.activeBlue,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
                 ),
               ),
             ),
+            SizedBox(height: 10),
           ],
         ],
       ),
