@@ -3,9 +3,19 @@ from flask_cors import CORS
 import os
 from ultralytics import YOLO
 import json
+import mysql.connector
 
 app = Flask(__name__)
-CORS(app, expose_headers=['Item-Counts'])  # Expose our new header
+CORS(app, expose_headers=['Item-Counts'])  
+
+# MySQL connection setup
+db_connection = mysql.connector.connect(
+    host="127.0.0.1", 
+    user="root",  
+    password="94vnhcURQ649451Q!", 
+    database="inventory_db" 
+)
+db_cursor = db_connection.cursor(dictionary=True)
 
 # Load YOLO model
 model_path = "../runs/detect/train3/weights/best.pt"
@@ -16,6 +26,14 @@ UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "..", "uploads")
 OUTPUT_FOLDER = os.path.join(os.path.dirname(__file__), "..", "outputs")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+
+def get_item_prices():
+    """Fetch item prices from the database."""
+    query = "SELECT item_name, price FROM item_prices"
+    db_cursor.execute(query)
+    result = db_cursor.fetchall()
+    item_prices = {item['item_name']: item['price'] for item in result}
+    return item_prices
 
 def get_latest_prediction_folder(output_folder):
     # Get all subdirectories in the 'predict' folder
@@ -59,7 +77,6 @@ def upload_file():
                 # Format the display name (convert from model class name to user-friendly name)
                 display_name = cls_name
                 
-                # Example transformations for better display names
                 if "lightblue_cp_rectangle_perrier" in cls_name:
                     display_name = "Perrier"
                 elif "lightblue_rectangle_sanclemente" in cls_name:
@@ -106,8 +123,7 @@ def upload_file():
                     display_name = "Schweppes"
                 elif "yellow_square_acquapanna" in cls_name:
                     display_name = "Acqua Panna"
-                # Add more mappings as needed for your specific classes
-                
+
                 # Increment the count for this type
                 if display_name in item_counts:
                     item_counts[display_name] += 1
@@ -115,6 +131,18 @@ def upload_file():
                     item_counts[display_name] = 1
         
         print(f"Counted items by type: {item_counts}")
+        
+        # Get item prices from the database
+        item_prices = get_item_prices()
+        
+        # Add prices to the item counts (we assume the display names match the item names in the database)
+        item_counts_with_prices = {}
+        for item, count in item_counts.items():
+            price = item_prices.get(item, None)
+            if price is not None:
+                item_counts_with_prices[item] = {"count": count, "price": float(price)}
+            else:
+                item_counts_with_prices[item] = {"count": count, "price": "N/A"}
         
         # Get the most recent 'predict' folder
         latest_predict_folder = get_latest_prediction_folder(OUTPUT_FOLDER)
@@ -129,8 +157,9 @@ def upload_file():
         # Create response with the processed image
         response = send_file(processed_image_path, mimetype='image/jpeg')
         
-        # Convert the counts dictionary to JSON and add it as a header
-        response.headers['Item-Counts'] = json.dumps(item_counts)
+        # Convert the counts and prices dictionary to JSON and add it as a header
+        response.headers['Item-Counts'] = json.dumps(item_counts_with_prices)
+        print(f"Response: {response.headers['Item-Counts']}")
         
         return response
     except Exception as e:

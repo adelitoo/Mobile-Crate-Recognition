@@ -23,7 +23,7 @@ class DisplayPictureScreen extends StatefulWidget {
 Future<void> sendImageToBackend(String imagePath, BuildContext context) async {
   var request = http.MultipartRequest(
     'POST',
-    Uri.parse('http://169.254.195.4:5000/upload'),
+    Uri.parse('http://192.168.1.27:5000/upload'),
   );
 
   request.files.add(await http.MultipartFile.fromPath('image', imagePath));
@@ -70,38 +70,6 @@ Future<void> sendImageToBackend(String imagePath, BuildContext context) async {
 
 class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
   late Map<String, int> counts;
-
-  // Brand colors for common beverages
-  /*final Map<String, Color> brandColors = {
-    'Perrier': Color(0xFF85C441),
-    'San Clemente': Color(0xFF00A3E0),
-    'Valser': Color(0xFF0078C1),
-    'Coca Cola': Color(0xFFE61A27),
-    'Pepsi': Color(0xFF005CB4),
-    'Sprite': Color(0xFF008B47),
-    'Evian': Color(0xFFFF85AB),
-    'San Pellegrino': Color(0xFFE71B2A),
-    'Fusto di birra': Color(0xFF8B4513), // Brown (kegs)
-    'Chopfab Doppelleu': Color(0xFF1C1C1C), // Dark Gray
-    'Epti': Color(0xFF1C1C1C), // Dark Gray
-    'Feldschlösschen Bier': Color(0xFF0033A0), // Deep Blue
-    'Gazzose': Color(0xFF0096FF), // Light Blue
-    'Hacker-Pschorr': Color(0xFF0050A1), // Dark Blue
-    'Henniez': Color(0xFF1E90FF), // Bright Blue
-    'Appenzeller Bier': Color(0xFF964B00), // Dark Brown
-    'Pomd\'or Suisse': Color(0xFF4CAF50), // Green
-    'Michel': Color(0xFFD32F2F), // Dark Red
-    'Cassa rossa': Color(0xFFFF0000), // Red
-    'Drinks': Color(0xFFD32F2F), // Dark Red
-    'Rivella': Color(0xFFFF4500), // Orange-Red
-    'Bottiglia d\'acqua': Color(0xFF87CEEB), // Light Blue
-    'Schweppes': Color(0xFFFFD700), // Yellow
-    'Acqua Panna': Color(0xFFFFD700), // Yellow (same as Schweppes)
-  };
-
-  Color getBrandColor(String brand) {
-    return brandColors[brand] ?? Colors.blueGrey;
-  }*/
 
   @override
   void initState() {
