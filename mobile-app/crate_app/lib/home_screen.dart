@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter/cupertino.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -96,7 +97,33 @@ class _HomeScreenState extends State<HomeScreen> {
             top: 75,
             right: 30,
             child: IconButton(
-              onPressed: signUserOut,
+              onPressed: () async {
+                final shouldLogout = await showDialog<bool>(
+                  context: context,
+                  builder:
+                      (context) => CupertinoAlertDialog(
+                        title: const Text('Confirm Logout'),
+                        content: const Text(
+                          'Are you sure you want to log out?',
+                        ),
+                        actions: [
+                          CupertinoDialogAction(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                            isDefaultAction: true,
+                          ),
+                          CupertinoDialogAction(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Logout'),
+                            isDestructiveAction: true,
+                          ),
+                        ],
+                      ),
+                );
+                if (shouldLogout == true) {
+                  signUserOut();
+                }
+              },
               icon: const Icon(Icons.logout),
               iconSize: 28,
               color: Colors.black,

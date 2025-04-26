@@ -714,57 +714,94 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
           ),
         ],
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 12.0, right: 8.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (counts.isNotEmpty) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  FloatingActionButton(
-                    heroTag: 'addItem',
-                    onPressed: _addNewItem,
-                    backgroundColor: CupertinoColors.activeGreen,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: Icon(Icons.add, color: Colors.white, size: 22),
-                    mini: true,
-                  ),
-                  SizedBox(width: 12),
-                  FloatingActionButton.extended(
-                    heroTag: 'saveItems',
-                    onPressed: () {
-                      Navigator.pop(context, counts);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Counts saved successfully!'),
-                          backgroundColor: CupertinoColors.activeGreen,
+      floatingActionButton:
+          counts.isNotEmpty
+              ? Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 24.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Add (plus) button - smaller, outlined
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: CupertinoColors.activeBlue,
+                            width: 2,
+                          ),
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.08),
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                    label: Text(
-                      'Save',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.add,
+                            color: CupertinoColors.activeBlue,
+                            size: 20,
+                          ),
+                          onPressed: _addNewItem,
+                          tooltip: 'Add Item',
+                          padding: EdgeInsets.zero,
+                          constraints: BoxConstraints(),
+                        ),
                       ),
-                    ),
-                    icon: Icon(Icons.save, size: 20),
-                    backgroundColor: CupertinoColors.activeBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(22),
-                    ),
+                      const SizedBox(width: 14),
+                      // Save button - smaller, filled, more prominent
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context, counts);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Counts saved successfully!'),
+                              backgroundColor: CupertinoColors.activeGreen,
+                            ),
+                          );
+                        },
+                        icon: Icon(Icons.save, size: 18, color: Colors.white),
+                        label: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 4.0,
+                            horizontal: 4.0,
+                          ),
+                          child: Text(
+                            'Save',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: CupertinoColors.activeBlue,
+                          foregroundColor: Colors.white,
+                          elevation: 6,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          shadowColor: Colors.blue.withOpacity(0.18),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
+                ),
+              )
+              : null,
     );
   }
 }
