@@ -70,16 +70,28 @@ Future<void> sendImageToBackend(String imagePath, BuildContext context) async {
 
 class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
   late Map<String, int> counts;
+  late Map<String, double?> prices;
 
   @override
   void initState() {
     super.initState();
-    // Convert the dynamic values to int
-    counts = Map<String, int>.from(
-      widget.itemCounts.map(
-        (key, value) => MapEntry(key, int.tryParse(value.toString()) ?? 0),
-      ),
-    );
+    // Parse counts and prices from itemCounts
+    counts = {};
+    prices = {};
+    widget.itemCounts.forEach((key, value) {
+      if (value is Map<String, dynamic>) {
+        counts[key] = int.tryParse(value['count'].toString()) ?? 0;
+        var priceVal = value['price'];
+        if (priceVal == null || priceVal == 'N/A') {
+          prices[key] = null;
+        } else {
+          prices[key] = double.tryParse(priceVal.toString());
+        }
+      } else {
+        counts[key] = int.tryParse(value.toString()) ?? 0;
+        prices[key] = null;
+      }
+    });
   }
 
   void _incrementCount(String item) {
@@ -91,9 +103,9 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
   void _decrementCount(String item) {
     setState(() {
       counts[item] = max((counts[item] ?? 0) - 1, 0);
-      // Remove if count reaches 0
       if (counts[item] == 0) {
         counts.remove(item);
+        prices.remove(item);
       }
     });
   }
@@ -103,7 +115,7 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
       context: context,
       builder: (context) {
         String newItemName = '';
-
+        String newItemPrice = '';
         return CupertinoAlertDialog(
           title: Text(
             "Add New Item",
@@ -115,6 +127,17 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
               CupertinoTextField(
                 placeholder: "Item name",
                 onChanged: (value) => newItemName = value,
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              SizedBox(height: 10),
+              CupertinoTextField(
+                placeholder: "Price (optional)",
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                onChanged: (value) => newItemPrice = value,
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: CupertinoColors.systemGrey6,
@@ -141,6 +164,7 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                 if (newItemName.isNotEmpty) {
                   setState(() {
                     counts[newItemName] = 1;
+                    prices[newItemName] = double.tryParse(newItemPrice) ?? null;
                   });
                 }
                 Navigator.pop(context);
@@ -154,6 +178,17 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
 
   int getTotalCount() {
     return counts.values.fold(0, (prev, count) => prev + count);
+  }
+
+  double getTotalPrice() {
+    double total = 0.0;
+    counts.forEach((item, count) {
+      final price = prices[item];
+      if (price != null) {
+        total += price * count;
+      }
+    });
+    return total;
   }
 
   // Method to open full screen image view
@@ -180,6 +215,7 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
   Widget build(BuildContext context) {
     final imageFile = File(widget.imagePath);
     final totalCount = getTotalCount();
+    final totalPrice = getTotalPrice();
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -422,19 +458,15 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                               itemCount: counts.length,
                               itemBuilder: (context, index) {
                                 final entry = counts.entries.elementAt(index);
+                                final price = prices[entry.key];
                                 return Dismissible(
-                                  key: Key(
-                                    entry.key,
-                                  ), // Unique key for each dismissible item
-                                  direction:
-                                      DismissDirection
-                                          .endToStart, // Swipe direction
+                                  key: Key(entry.key),
+                                  direction: DismissDirection.endToStart,
                                   onDismissed: (direction) {
-                                    // Remove item when swiped
                                     setState(() {
                                       counts.remove(entry.key);
+                                      prices.remove(entry.key);
                                     });
-                                    // Optionally, show a snackbar or confirmation
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text('${entry.key} removed'),
@@ -459,7 +491,6 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                                       color: Colors.white,
                                     ),
                                   ),
-
                                   child: Container(
                                     margin: EdgeInsets.only(bottom: 16),
                                     decoration: BoxDecoration(
@@ -506,37 +537,55 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                                           ),
                                         ),
                                       ),
-                                      title: Text(
-                                        entry.key,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
+                                      title: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              entry.key,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(width: 6),
+                                          Text(
+                                            price != null
+                                                ? 'CHF ${price.toStringAsFixed(2)}'
+                                                : 'N/A',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 13,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                       trailing: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          // Decrement button with a soft design
+                                          // Decrement button (smaller)
                                           IconButton(
+                                            iconSize: 18,
+                                            padding: EdgeInsets.zero,
+                                            constraints: BoxConstraints(),
                                             icon: Container(
-                                              padding: EdgeInsets.all(10),
+                                              padding: EdgeInsets.all(6),
                                               decoration: BoxDecoration(
-                                                color:
-                                                    Colors
-                                                        .red[50], // Lighter red for a softer look
+                                                color: Colors.red[50],
                                                 shape: BoxShape.circle,
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: Colors.red
-                                                        .withOpacity(0.3),
-                                                    blurRadius: 6,
-                                                    offset: Offset(0, 2),
+                                                        .withOpacity(0.15),
+                                                    blurRadius: 3,
+                                                    offset: Offset(0, 1),
                                                   ),
                                                 ],
                                               ),
                                               child: Icon(
                                                 Icons.remove,
-                                                size: 22,
+                                                size: 16,
                                                 color: Colors.red[700],
                                               ),
                                             ),
@@ -544,22 +593,23 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                                                 () =>
                                                     _decrementCount(entry.key),
                                           ),
-
-                                          // Count display container with smooth edges and a light background
+                                          // Count display (smaller)
                                           Container(
-                                            width: 50,
-                                            height: 50,
+                                            width: 32,
+                                            height: 32,
+                                            margin: EdgeInsets.symmetric(
+                                              horizontal: 4,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: Colors.grey[100],
-                                              borderRadius: BorderRadius.circular(
-                                                12,
-                                              ), // Rounded corners for the number container
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                               boxShadow: [
                                                 BoxShadow(
                                                   color: Colors.black
-                                                      .withOpacity(0.1),
-                                                  blurRadius: 6,
-                                                  offset: Offset(0, 2),
+                                                      .withOpacity(0.07),
+                                                  blurRadius: 2,
+                                                  offset: Offset(0, 1),
                                                 ),
                                               ],
                                             ),
@@ -567,36 +617,34 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                                             child: Text(
                                               '${entry.value}',
                                               style: TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                                color:
-                                                    Colors
-                                                        .black87, // Darker text for better readability
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black87,
                                               ),
                                             ),
                                           ),
-
-                                          // Increment button with a subtle hover effect
+                                          // Increment button (smaller)
                                           IconButton(
+                                            iconSize: 18,
+                                            padding: EdgeInsets.zero,
+                                            constraints: BoxConstraints(),
                                             icon: Container(
-                                              padding: EdgeInsets.all(10),
+                                              padding: EdgeInsets.all(6),
                                               decoration: BoxDecoration(
-                                                color:
-                                                    Colors
-                                                        .green[50], // Lighter green for a subtle look
+                                                color: Colors.green[50],
                                                 shape: BoxShape.circle,
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: Colors.green
-                                                        .withOpacity(0.3),
-                                                    blurRadius: 6,
-                                                    offset: Offset(0, 2),
+                                                        .withOpacity(0.15),
+                                                    blurRadius: 3,
+                                                    offset: Offset(0, 1),
                                                   ),
                                                 ],
                                               ),
                                               child: Icon(
                                                 Icons.add,
-                                                size: 22,
+                                                size: 16,
                                                 color: Colors.green[700],
                                               ),
                                             ),
@@ -612,81 +660,110 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                               },
                             ),
                           ),
+                          // Total price display
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: 16.0,
+                              right: 8.0,
+                              left: 8.0,
+                              bottom: 4.0,
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.blue[50],
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.blue.withOpacity(0.07),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Total',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.blue[900],
+                                    ),
+                                  ),
+                                  Text(
+                                    'CHF ' + totalPrice.toStringAsFixed(2),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue[800],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
             ),
           ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (counts.isNotEmpty) ...[
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(50), // Smooth rounded edges
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                    offset: Offset(0, 4), // Soft shadow for depth
-                  ),
-                ],
-              ),
-              child: FloatingActionButton(
-                heroTag: 'addItem',
-                onPressed: _addNewItem,
-                backgroundColor: CupertinoColors.activeGreen,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(50),
-                ),
-                child: Icon(
-                  Icons.add,
-                  color: Colors.white,
-                  size: 24, // Slightly larger for better visibility
-                ),
-              ),
-            ),
-            SizedBox(height: 10), // Space between buttons
-            Container(
-              width: 180, // Makes it more button-like instead of a wide FAB
-              height: 50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: FloatingActionButton.extended(
-                heroTag: 'saveItems',
-                onPressed: () {
-                  Navigator.pop(context, counts);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Counts saved successfully!'),
-                      backgroundColor: CupertinoColors.activeGreen,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 12.0, right: 8.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (counts.isNotEmpty) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  FloatingActionButton(
+                    heroTag: 'addItem',
+                    onPressed: _addNewItem,
+                    backgroundColor: CupertinoColors.activeGreen,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
                     ),
-                  );
-                },
-                label: Text(
-                  'Save',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                icon: Icon(Icons.save, size: 22),
-                backgroundColor: CupertinoColors.activeBlue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
+                    child: Icon(Icons.add, color: Colors.white, size: 22),
+                    mini: true,
+                  ),
+                  SizedBox(width: 12),
+                  FloatingActionButton.extended(
+                    heroTag: 'saveItems',
+                    onPressed: () {
+                      Navigator.pop(context, counts);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Counts saved successfully!'),
+                          backgroundColor: CupertinoColors.activeGreen,
+                        ),
+                      );
+                    },
+                    label: Text(
+                      'Save',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    icon: Icon(Icons.save, size: 20),
+                    backgroundColor: CupertinoColors.activeBlue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                  ),
+                ],
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
