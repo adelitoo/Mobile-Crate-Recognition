@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,9 +21,53 @@ class _HomeScreenState extends State<HomeScreen> {
   late GoogleMapController _mapController;
   final Map<String, Marker> _markers = {};
   final user = FirebaseAuth.instance.currentUser;
+  List<dynamic> usersInfo = [];
 
   void signUserOut() {
     FirebaseAuth.instance.signOut();
+  }
+
+  Future<void> getClientsCoordinates() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.1.27:5000/clients'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          usersInfo = data;
+        });
+        print('Received data from Python: $usersInfo');
+        addUserMarkers(); // Add markers for each user
+      } else {
+        print('Failed to call Python script: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error calling Python script: $e');
+    }
+  }
+
+  // Add markers for each user
+  void addUserMarkers() {
+    for (var userData in usersInfo) {
+      double latitude = userData['latitude'];
+      double longitude = userData['longitude'];
+      String name = userData['name'];
+
+      LatLng userLocation = LatLng(latitude, longitude);
+
+      var marker = Marker(
+        markerId: MarkerId(name), // Use the name as a unique identifier
+        position: userLocation,
+        infoWindow: InfoWindow(title: name, snippet: 'Location of $name'),
+      );
+
+      setState(() {
+        _markers[name] = marker;
+      });
+    }
   }
 
   Future<void> getCurrentLocation() async {
@@ -43,6 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     addMarker('currentLocation', currentLocation!);
+
+    await getClientsCoordinates();
   }
 
   void addMarker(String markerId, LatLng location) async {
@@ -81,6 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: Stack(
         children: <Widget>[
+          // Home title
           const Padding(
             padding: EdgeInsets.fromLTRB(30, 70, 0, 0),
             child: Text(
@@ -93,6 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          // Logout button
           Positioned(
             top: 75,
             right: 30,
@@ -129,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.black,
             ),
           ),
-
+          // User Info
           Positioned(
             top: 140,
             left: 30,
@@ -141,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Color.fromARGB(255, 172, 170, 170).withValues(),
+                    color: Color.fromARGB(255, 172, 170, 170).withOpacity(0.3),
                     blurRadius: 10,
                     spreadRadius: 2,
                     offset: const Offset(0, 5),
@@ -187,6 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          // Google Map
           Positioned(
             top: 260,
             left: 30,
@@ -197,8 +248,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        const Color.fromARGB(255, 172, 170, 170).withValues(),
+                    color: const Color.fromARGB(
+                      255,
+                      172,
+                      170,
+                      170,
+                    ).withOpacity(0.3),
                     blurRadius: 10,
                     spreadRadius: 2,
                     offset: const Offset(0, 5),
@@ -223,6 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          // Scan button
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(

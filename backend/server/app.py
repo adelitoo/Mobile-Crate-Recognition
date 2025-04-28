@@ -166,5 +166,17 @@ def upload_file():
         print(f"Error during processing: {e}")
         return jsonify({'error': 'Error processing the image'}), 500
 
+@app.route('/clients', methods=['GET'])
+def get_clients():
+    try:
+        query = "SELECT id, name, longitude, latitude FROM clients"
+        db_cursor.execute(query)
+        clients = db_cursor.fetchall()
+        print(clients)
+        return jsonify(clients), 200
+    except Exception as e:
+        print(f"Error fetching clients: {e}")
+        return jsonify({'error': 'Failed to fetch clients'}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
