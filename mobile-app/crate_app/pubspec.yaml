@@ -59,6 +59,7 @@ flutter:
     - assets/images/animations/login1.json
     - assets/images/icon/default_user.png
     - assets/images/icon/truck.png
+    - assets/images/icon/restaurant.png
 
   fonts:
     - family: SFPro

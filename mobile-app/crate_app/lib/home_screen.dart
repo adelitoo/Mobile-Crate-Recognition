@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
           usersInfo = data;
         });
         print('Received data from Python: $usersInfo');
-        addUserMarkers(); // Add markers for each user
+        addUserMarkers();
       } else {
         print('Failed to call Python script: ${response.statusCode}');
       }
@@ -49,8 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Add markers for each user
-  void addUserMarkers() {
+  void addUserMarkers() async {
     for (var userData in usersInfo) {
       double latitude = userData['latitude'];
       double longitude = userData['longitude'];
@@ -58,16 +57,48 @@ class _HomeScreenState extends State<HomeScreen> {
 
       LatLng userLocation = LatLng(latitude, longitude);
 
+      var markerIcon = await BitmapDescriptor.fromAssetImage(
+        const ImageConfiguration(),
+        'assets/images/icon/restaurant.png',
+      );
+
+      final resizedIcon = await BitmapDescriptor.fromAssetImage(
+        ImageConfiguration(size: Size(100, 100)),
+        'assets/images/icon/restaurant.png',
+      );
+
       var marker = Marker(
-        markerId: MarkerId(name), // Use the name as a unique identifier
+        markerId: MarkerId(name),
         position: userLocation,
         infoWindow: InfoWindow(title: name, snippet: 'Location of $name'),
+        icon: resizedIcon, // Use the resized icon
+        onTap: () {
+          showCustomSnackBar('$name');
+        },
       );
 
       setState(() {
         _markers[name] = marker;
       });
     }
+  }
+
+  void showCustomSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 16.0, color: Colors.white),
+        ),
+        backgroundColor: Colors.black.withOpacity(0.8), // Dark background color
+        duration: Duration(seconds: 2), // Duration similar to iOS-style
+        behavior: SnackBarBehavior.floating, // Floating style
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0), // Rounded corners
+        ),
+        margin: EdgeInsets.fromLTRB(16.0, 100.0, 16.0, 16.0),
+      ),
+    );
   }
 
   Future<void> getCurrentLocation() async {
@@ -264,16 +295,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(20),
                 child: GoogleMap(
                   initialCameraPosition: CameraPosition(
-                    target: currentLocation ?? LatLng(46.0100800, 8.9600400),
-                    zoom: 14,
+                    target:
+                        currentLocation ??
+                        LatLng(
+                          0,
+                          0,
+                        ), // Initial position if location is not available
+                    zoom: 14.0,
                   ),
-                  onMapCreated: (controller) {
+                  markers: Set<Marker>.of(_markers.values),
+                  onMapCreated: (GoogleMapController controller) {
                     _mapController = controller;
-                    if (currentLocation != null) {
-                      addMarker('currentLocation', currentLocation!);
-                    }
                   },
-                  markers: _markers.values.toSet(),
                 ),
               ),
             ),
