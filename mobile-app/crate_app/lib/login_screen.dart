@@ -1,30 +1,57 @@
-import 'package:crate_app/services/auth_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'components/my_textfield.dart';
 import 'components/my_button.dart';
-import 'components/square_title.dart';
+import 'services/sql_auth_service.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  final Function()? onTap;
-  const LoginScreen({super.key, required this.onTap});
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Text editing controllers
-  final emailController = TextEditingController();
   final passwordController = TextEditingController();
-
-  // Error message to display
   String errorMessage = '';
+  String? selectedEmployee;
+  List<String> employees = [];
+  final SqlAuthService authService = SqlAuthService();
+  bool isLoading = true;
 
-  // Sign user in method
+  @override
+  void initState() {
+    super.initState();
+    loadEmployees();
+  }
+
+  Future<void> loadEmployees() async {
+    try {
+      print('Loading employees...'); // Debug print
+      final employeeList = await authService.getEmployees();
+      print('Received employees: $employeeList'); // Debug print
+      setState(() {
+        employees = employeeList;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading employees: $e'); // Debug print
+      setState(() {
+        errorMessage = 'Failed to load employees: $e';
+        isLoading = false;
+      });
+    }
+  }
+
   void signUserIn() async {
-    // Show loading circle
+    if (selectedEmployee == null) {
+      setState(() {
+        errorMessage = 'Please select an employee';
+      });
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) {
@@ -32,27 +59,33 @@ class _LoginScreenState extends State<LoginScreen> {
       },
     );
 
-    // Try sign in
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
+      final success = await authService.login(
+        selectedEmployee!,
+        passwordController.text,
       );
-      // Pop the loading circle
+
+      Navigator.pop(context);
+
+      if (success) {
+        setState(() {
+          errorMessage = '';
+        });
+        // Navigate to home screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(username: selectedEmployee!),
+          ),
+        );
+      } else {
+        setState(() {
+          errorMessage = 'Invalid password';
+        });
+      }
+    } catch (e) {
       Navigator.pop(context);
       setState(() {
-        errorMessage = ''; // Clear error on successful login
-      });
-    } on FirebaseAuthException catch (e) {
-      Navigator.pop(context);
-      setState(() {
-        if (e.code == 'wrong-email') {
-          errorMessage = 'Incorrect Email';
-        } else if (e.code == 'wrong-password') {
-          errorMessage = 'Invalid email or password';
-        } else {
-          errorMessage = 'Invalid email or password';
-        }
+        errorMessage = 'Login failed. Please try again.';
       });
     }
   }
@@ -68,30 +101,60 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                //const SizedBox(height: 25),
                 Lottie.asset(
                   'assets/images/animations/login1.json',
                   width: 200,
                 ),
-                //const Icon(Icons.lock, size: 100),
-                //const SizedBox(height: 25),
                 Text(
-                  'Welcome back you\'ve been missed!',
+                  'Welcome back!',
                   style: TextStyle(color: Colors.grey[700], fontSize: 16),
                 ),
                 const SizedBox(height: 25),
-                MyTextField(
-                  controller: emailController,
-                  hintText: 'Email',
-                  obscureText: false,
+                
+                // Employee Selection Dropdown
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      border: Border.all(color: Colors.white),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        hint: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12.0),
+                          child: Text('Select Employee'),
+                        ),
+                        value: selectedEmployee,
+                        items: employees.map((String employee) {
+                          return DropdownMenuItem<String>(
+                            value: employee,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                              child: Text(employee),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedEmployee = newValue;
+                            errorMessage = '';
+                          });
+                        },
+                      ),
+                    ),
+                  ),
                 ),
+                
                 const SizedBox(height: 10),
                 MyTextField(
                   controller: passwordController,
                   hintText: 'Password',
                   obscureText: true,
                 ),
-                // Display error message below input fields
+                
                 if (errorMessage.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -107,66 +170,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                const SizedBox(height: 10),
+                
                 const SizedBox(height: 25),
                 MyButton(text: "Sign In", onTap: signUserIn),
-                const SizedBox(height: 50),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Divider(thickness: 0.5, color: Colors.grey[400]),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Text(
-                          'Or continue with',
-                          style: TextStyle(color: Colors.grey[700]),
-                        ),
-                      ),
-                      Expanded(
-                        child: Divider(thickness: 0.5, color: Colors.grey[400]),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 50),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SquareTile(
-                      onTap: () => AuthService().signInWithGoogle(),
-                      imagePath: 'assets/images/icon/google.png',
-                    ),
-                    SizedBox(width: 25),
-                    SquareTile(
-                      onTap: () => AuthService().signInWithGoogle(),
-                      imagePath: 'assets/images/icon/apple.png',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 50),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Not a member?',
-                      style: TextStyle(color: Colors.grey[700]),
-                    ),
-                    const SizedBox(width: 4),
-                    GestureDetector(
-                      onTap: widget.onTap,
-                      child: const Text(
-                        'Register now',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),

@@ -4,8 +4,13 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 class TakePictureScreen extends StatefulWidget {
-  const TakePictureScreen({super.key, required this.camera});
+  const TakePictureScreen({
+    super.key, 
+    required this.camera,
+    required this.username,
+  });
   final CameraDescription camera;
+  final String username;
 
   @override
   TakePictureScreenState createState() => TakePictureScreenState();
@@ -174,7 +179,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
               if (!context.mounted) return;
 
-              await sendImageToBackend(image.path, context);
+              await sendImageToBackend(image.path, context, widget.username);
             } catch (e) {
               print(e);
               ScaffoldMessenger.of(context).showSnackBar(

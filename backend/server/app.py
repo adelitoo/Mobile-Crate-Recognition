@@ -4,6 +4,8 @@ import os
 from ultralytics import YOLO
 import json
 import mysql.connector
+import math
+import bcrypt
 
 app = Flask(__name__)
 CORS(app, expose_headers=['Item-Counts'])  
@@ -177,6 +179,110 @@ def get_clients():
     except Exception as e:
         print(f"Error fetching clients: {e}")
         return jsonify({'error': 'Failed to fetch clients'}), 500
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculate the distance between two points on Earth using the Haversine formula.
+    Returns distance in kilometers.
+    """
+    R = 6371  # Earth's radius in kilometers
+    
+    # Convert latitude and longitude from degrees to radians
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+    
+    # Calculate differences
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    
+    # Haversine formula
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    
+    return R * c
+
+@app.route('/nearest_client', methods=['GET'])
+def get_nearest_client():
+    try:
+        # Get user's current location from query parameters
+        user_lat = float(request.args.get('lat'))
+        user_lon = float(request.args.get('lon'))
+        
+        # Get all clients from the database
+        query = "SELECT id, name, longitude, latitude FROM clients"
+        db_cursor.execute(query)
+        clients = db_cursor.fetchall()
+        
+        if not clients:
+            return jsonify({'error': 'No clients found'}), 404
+        
+        # Find the nearest client
+        nearest_client = None
+        min_distance = float('inf')
+        
+        for client in clients:
+            distance = calculate_distance(
+                user_lat, user_lon,
+                client['latitude'], client['longitude']
+            )
+            
+            if distance < min_distance:
+                min_distance = distance
+                nearest_client = client
+        
+        if nearest_client:
+            return jsonify({
+                'id': nearest_client['id'],
+                'name': nearest_client['name'],
+                'distance': min_distance
+            }), 200
+        else:
+            return jsonify({'error': 'Could not find nearest client'}), 404
+            
+    except ValueError:
+        return jsonify({'error': 'Invalid latitude or longitude parameters'}), 400
+    except Exception as e:
+        print(f"Error finding nearest client: {e}")
+        return jsonify({'error': 'Failed to find nearest client'}), 500
+
+@app.route('/employees', methods=['GET'])
+def get_employees():
+    try:
+        query = "SELECT username FROM employees"
+        db_cursor.execute(query)
+        employees = db_cursor.fetchall()
+        return jsonify([emp['username'] for emp in employees]), 200
+    except Exception as e:
+        print(f"Error fetching employees: {e}")
+        return jsonify({'error': 'Failed to fetch employees'}), 500
+
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+
+        if not username or not password:
+            return jsonify({'error': 'Username and password are required'}), 400
+
+        # Get employee's hashed password from database
+        query = "SELECT password_hash FROM employees WHERE username = %s"
+        db_cursor.execute(query, (username,))
+        result = db_cursor.fetchone()
+
+        if not result:
+            return jsonify({'error': 'Invalid username or password'}), 401
+
+        # Verify password
+        hashed_password = result['password_hash']
+        if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
+            return jsonify({'message': 'Login successful'}), 200
+        else:
+            return jsonify({'error': 'Invalid username or password'}), 401
+
+    except Exception as e:
+        print(f"Error during login: {e}")
+        return jsonify({'error': 'Login failed'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

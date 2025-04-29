@@ -1,6 +1,5 @@
 import 'package:camera/camera.dart';
 import 'package:crate_app/camera_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -8,9 +7,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:crate_app/login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String username;
+  const HomeScreen({super.key, required this.username});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -20,27 +21,24 @@ class _HomeScreenState extends State<HomeScreen> {
   LatLng? currentLocation;
   late GoogleMapController _mapController;
   final Map<String, Marker> _markers = {};
-  final user = FirebaseAuth.instance.currentUser;
-  List<dynamic> usersInfo = [];
 
   void signUserOut() {
-    FirebaseAuth.instance.signOut();
+    // Navigate back to login screen
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   Future<void> getClientsCoordinates() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.27:5000/clients'),
+        Uri.parse('http://192.168.1.123:5000/clients'),
         headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          usersInfo = data;
-        });
-        print('Received data from Python: $usersInfo');
-        addUserMarkers();
+        addUserMarkers(data);
       } else {
         print('Failed to call Python script: ${response.statusCode}');
       }
@@ -49,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void addUserMarkers() async {
+  void addUserMarkers(List<dynamic> usersInfo) async {
     for (var userData in usersInfo) {
       double latitude = userData['latitude'];
       double longitude = userData['longitude'];
@@ -233,13 +231,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage:
-                        user?.photoURL != null
-                            ? NetworkImage(user!.photoURL!)
-                            : const AssetImage(
-                                  'assets/images/icon/default_user.png',
-                                )
-                                as ImageProvider,
+                    backgroundImage: const AssetImage(
+                      'assets/images/icon/default_user.png',
+                    ) as ImageProvider,
                     backgroundColor: Colors.white,
                   ),
                   const SizedBox(width: 15),
@@ -247,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user?.displayName ?? user?.email ?? "User",
+                        widget.username,
                         style: const TextStyle(
                           fontFamily: 'SFPro',
                           fontSize: 20,
@@ -274,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
             left: 30,
             right: 30,
             child: Container(
-              height: 550,
+              height: 520,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
@@ -293,20 +287,48 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target:
-                        currentLocation ??
-                        LatLng(
-                          0,
-                          0,
-                        ), // Initial position if location is not available
-                    zoom: 14.0,
-                  ),
-                  markers: Set<Marker>.of(_markers.values),
-                  onMapCreated: (GoogleMapController controller) {
-                    _mapController = controller;
-                  },
+                child: Stack(
+                  children: [
+                    GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: currentLocation ?? LatLng(0, 0),
+                        zoom: 14.0,
+                      ),
+                      markers: Set<Marker>.of(_markers.values),
+                      onMapCreated: (GoogleMapController controller) {
+                        _mapController = controller;
+                      },
+                    ),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 5,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            if (currentLocation != null) {
+                              _mapController.animateCamera(
+                                CameraUpdate.newLatLngZoom(currentLocation!, 14),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.my_location),
+                          color: Colors.blue,
+                          iconSize: 24,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -315,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
               child: Container(
                 decoration: BoxDecoration(
                   boxShadow: [
@@ -334,8 +356,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder:
-                            (context) => TakePictureScreen(camera: firstCamera),
+                        builder: (context) => TakePictureScreen(
+                          camera: firstCamera,
+                          username: widget.username,
+                        ),
                       ),
                     );
                   },

@@ -65,6 +65,37 @@ LOCK TABLES `item_prices` WRITE;
 INSERT INTO `item_prices` VALUES (1,'Perrier',15.00),(2,'San Clemente',17.00),(3,'Valser',19.00),(4,'Beer keg',10.00),(5,'Chopfab Doppelleu',20.00),(6,'Epti',20.00),(7,'Feldschlösschen Bier',20.00),(8,'Gazzose',16.00),(9,'Hacker-Pschorr',15.00),(10,'Henniez',21.00),(11,'Appenzeller Bier',14.00),(12,'Pomd\'or Suisse',14.00),(13,'Michel',17.00),(14,'Coca-Cola',14.00),(15,'Unknown red crate',19.00),(16,'Drinks',11.00),(17,'Rivella',12.00),(18,'Water bottle',10.00),(19,'Schweppes',13.00),(20,'Acqua Panna',15.00);
 /*!40000 ALTER TABLE `item_prices` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `employees`
+--
+
+DROP TABLE IF EXISTS `employees`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `employees` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL UNIQUE,
+  `password_hash` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `employees`
+--
+
+LOCK TABLES `employees` WRITE;
+/*!40000 ALTER TABLE `employees` DISABLE KEYS */;
+INSERT INTO `employees` VALUES 
+(1,'Mario','$2b$12$F7m9ixzYv4rYo8bqERjPQuRSxDH9kVEhBjQ81C3Sp8qiL24mmnAMG'),
+(2,'Luca','$2b$12$F7m9ixzYv4rYo8bqERjPQuRSxDH9kVEhBjQ81C3Sp8qiL24mmnAMG'),
+(3,'Giovanni','$2b$12$F7m9ixzYv4rYo8bqERjPQuRSxDH9kVEhBjQ81C3Sp8qiL24mmnAMG'),
+(4,'Marco','$2b$12$F7m9ixzYv4rYo8bqERjPQuRSxDH9kVEhBjQ81C3Sp8qiL24mmnAMG'),
+(5,'Antonio','$2b$12$F7m9ixzYv4rYo8bqERjPQuRSxDH9kVEhBjQ81C3Sp8qiL24mmnAMG');
+/*!40000 ALTER TABLE `employees` ENABLE KEYS */;
+UNLOCK TABLES;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
