@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> getClientsCoordinates() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.123:5000/clients'),
+        Uri.parse('http://192.168.1.27:5000/clients'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -231,9 +231,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: const AssetImage(
-                      'assets/images/icon/default_user.png',
-                    ) as ImageProvider,
+                    backgroundImage:
+                        const AssetImage('assets/images/icon/default_user.png')
+                            as ImageProvider,
                     backgroundColor: Colors.white,
                   ),
                   const SizedBox(width: 15),
@@ -318,7 +318,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () {
                             if (currentLocation != null) {
                               _mapController.animateCamera(
-                                CameraUpdate.newLatLngZoom(currentLocation!, 14),
+                                CameraUpdate.newLatLngZoom(
+                                  currentLocation!,
+                                  14,
+                                ),
                               );
                             }
                           },
@@ -356,10 +359,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => TakePictureScreen(
-                          camera: firstCamera,
-                          username: widget.username,
-                        ),
+                        builder:
+                            (context) => TakePictureScreen(
+                              camera: firstCamera,
+                              username: widget.username,
+                            ),
                       ),
                     );
                   },

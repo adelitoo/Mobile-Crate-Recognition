@@ -25,10 +25,14 @@ class DisplayPictureScreen extends StatefulWidget {
   State<DisplayPictureScreen> createState() => _DisplayPictureScreenState();
 }
 
-Future<void> sendImageToBackend(String imagePath, BuildContext context, String username) async {
+Future<void> sendImageToBackend(
+  String imagePath,
+  BuildContext context,
+  String username,
+) async {
   var request = http.MultipartRequest(
     'POST',
-    Uri.parse('http://192.168.1.123:5000/upload'),
+    Uri.parse('http://192.168.1.27:5000/upload'),
   );
 
   request.files.add(await http.MultipartFile.fromPath('image', imagePath));
@@ -61,11 +65,12 @@ Future<void> sendImageToBackend(String imagePath, BuildContext context, String u
     if (!context.mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => DisplayPictureScreen(
-          imagePath: tempFile.path,
-          itemCounts: itemCounts,
-          username: username,
-        ),
+        builder:
+            (context) => DisplayPictureScreen(
+              imagePath: tempFile.path,
+              itemCounts: itemCounts,
+              username: username,
+            ),
       ),
     );
   } else {
@@ -109,7 +114,7 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
   Future<void> _loadClients() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.123:5000/clients'),
+        Uri.parse('http://192.168.1.27:5000/clients'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -280,43 +285,46 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
-        child: Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: Container(
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(CupertinoColors.activeBlue),
+      builder:
+          (context) => WillPopScope(
+            onWillPop: () async => false,
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                SizedBox(height: 20),
-                Text(
-                  'Generating invoice...',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        CupertinoColors.activeBlue,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Generating invoice...',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
     );
 
     // Validate client selection
     if (selectedClient == null) {
       // Close the progress dialog
       Navigator.of(context).pop();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please select a client'),
@@ -327,13 +335,14 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
     }
 
     // Convert counts map to the format expected by PDF generator
-    final List<Map<String, dynamic>> itemsList = counts.entries.map((entry) {
-      return {
-        'name': entry.key,
-        'count': entry.value,
-        'price': prices[entry.key],
-      };
-    }).toList();
+    final List<Map<String, dynamic>> itemsList =
+        counts.entries.map((entry) {
+          return {
+            'name': entry.key,
+            'count': entry.value,
+            'price': prices[entry.key],
+          };
+        }).toList();
 
     // Generate and save the PDF, get the result status
     final bool success = await _pdfGenerator.generateAndSavePdf(
@@ -487,17 +496,20 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                             isExpanded: true,
                             hint: Center(
                               child: Text(
-                                isLoadingClients ? 'Loading clients...' : 'Select Client',
+                                isLoadingClients
+                                    ? 'Loading clients...'
+                                    : 'Select Client',
                                 style: TextStyle(color: Colors.grey[600]),
                               ),
                             ),
                             value: selectedClient,
-                            items: clients.map((String client) {
-                              return DropdownMenuItem<String>(
-                                value: client,
-                                child: Center(child: Text(client)),
-                              );
-                            }).toList(),
+                            items:
+                                clients.map((String client) {
+                                  return DropdownMenuItem<String>(
+                                    value: client,
+                                    child: Center(child: Text(client)),
+                                  );
+                                }).toList(),
                             onChanged: (String? newValue) {
                               setState(() {
                                 selectedClient = newValue;
@@ -512,7 +524,10 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                     Expanded(
                       flex: 1,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 12.0,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
@@ -528,7 +543,11 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.person, color: Colors.blue[600], size: 20),
+                              Icon(
+                                Icons.person,
+                                color: Colors.blue[600],
+                                size: 20,
+                              ),
                               SizedBox(width: 8),
                               Text(
                                 widget.username,
@@ -551,7 +570,11 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
           ),
           // Image section with card wrapper
           Padding(
-            padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 12.0),
+            padding: const EdgeInsets.only(
+              left: 12.0,
+              right: 12.0,
+              bottom: 12.0,
+            ),
             child: Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -780,7 +803,8 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: CupertinoColors.activeBlue.withOpacity(0.3),
+                                          color: CupertinoColors.activeBlue
+                                              .withOpacity(0.3),
                                           blurRadius: 8,
                                           offset: Offset(0, 2),
                                         ),
@@ -1046,7 +1070,8 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                                 vertical: 12,
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
@@ -1127,4 +1152,3 @@ class FullScreenImageView extends StatelessWidget {
     );
   }
 }
-

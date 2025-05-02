@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:bcrypt/bcrypt.dart';
 
 class SqlAuthService {
-  final String baseUrl = 'http://192.168.1.123:5000'; // Your backend URL
+  final String baseUrl = 'http://192.168.1.27:5000'; // Your backend URL
 
   Future<List<String>> getEmployees() async {
     try {
@@ -30,10 +30,7 @@ class SqlAuthService {
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'username': username,
-          'password': password,
-        }),
+        body: jsonEncode({'username': username, 'password': password}),
       );
 
       if (response.statusCode == 200) {
