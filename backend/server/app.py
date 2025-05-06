@@ -86,11 +86,11 @@ def upload_file():
                 elif "lightblue_rectangle_valser" in cls_name:
                     display_name = "Valser"
                 elif "beer_keg_large" in cls_name:
-                    display_name = "Beer keg"
+                    display_name = "Fusto di birra"
                 elif "beer_keg_medium" in cls_name:
-                    display_name = "Beer keg"
+                    display_name = "Fusto di birra"
                 elif "beer_keg_small" in cls_name:
-                    display_name = "Beer keg"
+                    display_name = "Fusto di birra"
                 elif "black_square_chopfabdoppelleu" in cls_name:
                     display_name = "Chopfab Doppelleu"
                 elif "black_square_epti" in cls_name:
@@ -118,9 +118,9 @@ def upload_file():
                 elif "red_square_rivella" in cls_name:
                     display_name = "Rivella"
                 elif "water_bottle_large" in cls_name:
-                    display_name = "Water bottle"
+                    display_name = "Acqua"
                 elif "water_bottle_small" in cls_name:
-                    display_name = "Water bottle"
+                    display_name = "Acqua"
                 elif "yellow_rectangle_schweppes" in cls_name:
                     display_name = "Schweppes"
                 elif "yellow_square_acquapanna" in cls_name:
