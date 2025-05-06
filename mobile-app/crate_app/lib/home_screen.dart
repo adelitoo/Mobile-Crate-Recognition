@@ -1,13 +1,17 @@
 import 'package:camera/camera.dart';
 import 'package:crate_app/camera_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:crate_app/login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String username;
+  const HomeScreen({super.key, required this.username});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -17,10 +21,82 @@ class _HomeScreenState extends State<HomeScreen> {
   LatLng? currentLocation;
   late GoogleMapController _mapController;
   final Map<String, Marker> _markers = {};
-  final user = FirebaseAuth.instance.currentUser;
 
   void signUserOut() {
-    FirebaseAuth.instance.signOut();
+    // Navigate back to login screen
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
+  Future<void> getClientsCoordinates() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.1.27:5000/clients'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        addUserMarkers(data);
+      } else {
+        print('Failed to call Python script: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error calling Python script: $e');
+    }
+  }
+
+  void addUserMarkers(List<dynamic> usersInfo) async {
+    for (var userData in usersInfo) {
+      double latitude = userData['latitude'];
+      double longitude = userData['longitude'];
+      String name = userData['name'];
+
+      LatLng userLocation = LatLng(latitude, longitude);
+
+      var markerIcon = await BitmapDescriptor.fromAssetImage(
+        const ImageConfiguration(),
+        'assets/images/icon/restaurant.png',
+      );
+
+      final resizedIcon = await BitmapDescriptor.fromAssetImage(
+        ImageConfiguration(size: Size(100, 100)),
+        'assets/images/icon/restaurant.png',
+      );
+
+      var marker = Marker(
+        markerId: MarkerId(name),
+        position: userLocation,
+        infoWindow: InfoWindow(title: name, snippet: 'Location of $name'),
+        icon: resizedIcon, // Use the resized icon
+        onTap: () {
+          showCustomSnackBar('$name');
+        },
+      );
+
+      setState(() {
+        _markers[name] = marker;
+      });
+    }
+  }
+
+  void showCustomSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 16.0, color: Colors.white),
+        ),
+        backgroundColor: Colors.black.withOpacity(0.8), // Dark background color
+        duration: Duration(seconds: 2), // Duration similar to iOS-style
+        behavior: SnackBarBehavior.floating, // Floating style
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0), // Rounded corners
+        ),
+        margin: EdgeInsets.fromLTRB(16.0, 100.0, 16.0, 16.0),
+      ),
+    );
   }
 
   Future<void> getCurrentLocation() async {
@@ -42,6 +118,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     addMarker('currentLocation', currentLocation!);
+
+    await getClientsCoordinates();
   }
 
   void addMarker(String markerId, LatLng location) async {
@@ -80,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: Stack(
         children: <Widget>[
+          // Home title
           const Padding(
             padding: EdgeInsets.fromLTRB(30, 70, 0, 0),
             child: Text(
@@ -92,17 +171,44 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          // Logout button
           Positioned(
             top: 75,
             right: 30,
             child: IconButton(
-              onPressed: signUserOut,
+              onPressed: () async {
+                final shouldLogout = await showDialog<bool>(
+                  context: context,
+                  builder:
+                      (context) => CupertinoAlertDialog(
+                        title: const Text('Confirm Logout'),
+                        content: const Text(
+                          'Are you sure you want to log out?',
+                        ),
+                        actions: [
+                          CupertinoDialogAction(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                            isDefaultAction: true,
+                          ),
+                          CupertinoDialogAction(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Logout'),
+                            isDestructiveAction: true,
+                          ),
+                        ],
+                      ),
+                );
+                if (shouldLogout == true) {
+                  signUserOut();
+                }
+              },
               icon: const Icon(Icons.logout),
               iconSize: 28,
               color: Colors.black,
             ),
           ),
-
+          // User Info
           Positioned(
             top: 140,
             left: 30,
@@ -114,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Color.fromARGB(255, 172, 170, 170).withValues(),
+                    color: Color.fromARGB(255, 172, 170, 170).withOpacity(0.3),
                     blurRadius: 10,
                     spreadRadius: 2,
                     offset: const Offset(0, 5),
@@ -126,12 +232,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   CircleAvatar(
                     radius: 30,
                     backgroundImage:
-                        user?.photoURL != null
-                            ? NetworkImage(user!.photoURL!)
-                            : const AssetImage(
-                                  'assets/images/icon/default_user.png',
-                                )
-                                as ImageProvider,
+                        const AssetImage('assets/images/icon/default_user.png')
+                            as ImageProvider,
                     backgroundColor: Colors.white,
                   ),
                   const SizedBox(width: 15),
@@ -139,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user?.displayName ?? user?.email ?? "User",
+                        widget.username,
                         style: const TextStyle(
                           fontFamily: 'SFPro',
                           fontSize: 20,
@@ -160,18 +262,23 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          // Google Map
           Positioned(
             top: 260,
             left: 30,
             right: 30,
             child: Container(
-              height: 550,
+              height: 520,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        const Color.fromARGB(255, 172, 170, 170).withValues(),
+                    color: const Color.fromARGB(
+                      255,
+                      172,
+                      170,
+                      170,
+                    ).withOpacity(0.3),
                     blurRadius: 10,
                     spreadRadius: 2,
                     offset: const Offset(0, 5),
@@ -180,26 +287,60 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: currentLocation ?? LatLng(46.0100800, 8.9600400),
-                    zoom: 14,
-                  ),
-                  onMapCreated: (controller) {
-                    _mapController = controller;
-                    if (currentLocation != null) {
-                      addMarker('currentLocation', currentLocation!);
-                    }
-                  },
-                  markers: _markers.values.toSet(),
+                child: Stack(
+                  children: [
+                    GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: currentLocation ?? LatLng(0, 0),
+                        zoom: 14.0,
+                      ),
+                      markers: Set<Marker>.of(_markers.values),
+                      onMapCreated: (GoogleMapController controller) {
+                        _mapController = controller;
+                      },
+                    ),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 5,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            if (currentLocation != null) {
+                              _mapController.animateCamera(
+                                CameraUpdate.newLatLngZoom(
+                                  currentLocation!,
+                                  14,
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.my_location),
+                          color: Colors.blue,
+                          iconSize: 24,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
+          // Scan button
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
               child: Container(
                 decoration: BoxDecoration(
                   boxShadow: [
@@ -219,7 +360,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       context,
                       MaterialPageRoute(
                         builder:
-                            (context) => TakePictureScreen(camera: firstCamera),
+                            (context) => TakePictureScreen(
+                              camera: firstCamera,
+                              username: widget.username,
+                            ),
                       ),
                     );
                   },

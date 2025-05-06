@@ -15,6 +15,8 @@ class PdfGeneratorService {
     required String imagePath,
     required List<Map<String, dynamic>> items,
     required BuildContext context,
+    required String clientName,
+    required String employeeName,
   }) async {
     final pdf = pw.Document();
 
@@ -52,7 +54,12 @@ class PdfGeneratorService {
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(40),
           header: (pw.Context context) {
-            return _buildHeaderComplete(logoImage, formattedDateTime);
+            return _buildHeaderComplete(
+              logoImage,
+              formattedDateTime,
+              clientName,
+              employeeName,
+            );
           },
           build: (pw.Context context) {
             return [
@@ -106,13 +113,7 @@ class PdfGeneratorService {
               pw.SizedBox(height: 20),
 
               // Total only on the last page
-              if (isLastPage)
-                _buildTotal(
-                  items.fold<int>(
-                    0,
-                    (int sum, item) => sum + (item['count'] as int),
-                  ),
-                ),
+              if (isLastPage) _buildTotal(pageItems),
             ];
           },
         ),
@@ -125,7 +126,8 @@ class PdfGeneratorService {
       // Use the file picker to choose the save location and pass the bytes directly
       String? filePath = await FilePicker.platform.saveFile(
         dialogTitle: 'Choose where to save the PDF',
-        fileName: 'invoice.pdf',
+        fileName:
+            'invoice_${now.day.toString().padLeft(2, '0')}_${now.month.toString().padLeft(2, '0')}_${now.year}-${now.hour.toString().padLeft(2, '0')}_${now.minute.toString().padLeft(2, '0')}.pdf',
         type: FileType.custom,
         allowedExtensions: ['pdf'],
         bytes: pdfBytes, // Pass the required bytes
@@ -166,12 +168,14 @@ class PdfGeneratorService {
   pw.Widget _buildHeaderComplete(
     pw.MemoryImage logoImage,
     String formattedDateTime,
+    String clientName,
+    String employeeName,
   ) {
     return pw.Column(
       children: [
         _buildHeader(logoImage, formattedDateTime),
         pw.SizedBox(height: 20),
-        _buildClientInfo(),
+        _buildClientInfo(clientName, employeeName),
         pw.SizedBox(height: 20),
       ],
     );
@@ -211,7 +215,7 @@ class PdfGeneratorService {
   }
 
   // Client and employee info
-  pw.Widget _buildClientInfo() {
+  pw.Widget _buildClientInfo(String clientName, String employeeName) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(10),
       decoration: pw.BoxDecoration(
@@ -232,7 +236,7 @@ class PdfGeneratorService {
                 ),
               ),
               pw.SizedBox(height: 4),
-              pw.Text('Cliente 1', style: pw.TextStyle(fontSize: 14)),
+              pw.Text(clientName, style: pw.TextStyle(fontSize: 14)),
             ],
           ),
           pw.Column(
@@ -246,7 +250,7 @@ class PdfGeneratorService {
                 ),
               ),
               pw.SizedBox(height: 4),
-              pw.Text('Dipendente 1', style: pw.TextStyle(fontSize: 14)),
+              pw.Text(employeeName, style: pw.TextStyle(fontSize: 14)),
             ],
           ),
         ],
@@ -268,7 +272,9 @@ class PdfGeneratorService {
         ),
         columnWidths: {
           0: const pw.FlexColumnWidth(2),
-          1: const pw.FlexColumnWidth(1),
+          1: const pw.FlexColumnWidth(1.2),
+          2: const pw.FlexColumnWidth(1),
+          3: const pw.FlexColumnWidth(1),
         },
         children: [
           // Header row
@@ -303,7 +309,37 @@ class PdfGeneratorService {
                 ),
                 child: pw.Center(
                   child: pw.Text(
+                    'Prezzo unitario',
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+              pw.Padding(
+                padding: const pw.EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 10,
+                ),
+                child: pw.Center(
+                  child: pw.Text(
                     'Quantità',
+                    style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+              pw.Padding(
+                padding: const pw.EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 10,
+                ),
+                child: pw.Center(
+                  child: pw.Text(
+                    'Totale',
                     style: pw.TextStyle(
                       fontWeight: pw.FontWeight.bold,
                       fontSize: 12,
@@ -337,7 +373,35 @@ class PdfGeneratorService {
                       ),
                       child: pw.Center(
                         child: pw.Text(
+                          item['price'] != null
+                              ? 'CHF ${item['price'].toStringAsFixed(2)}'
+                              : 'N/A',
+                          style: const pw.TextStyle(fontSize: 11),
+                        ),
+                      ),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(
+                        vertical: 6,
+                        horizontal: 10,
+                      ),
+                      child: pw.Center(
+                        child: pw.Text(
                           item['count'].toString(),
+                          style: const pw.TextStyle(fontSize: 11),
+                        ),
+                      ),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(
+                        vertical: 6,
+                        horizontal: 10,
+                      ),
+                      child: pw.Center(
+                        child: pw.Text(
+                          item['price'] != null
+                              ? 'CHF ${(item['price'] * item['count']).toStringAsFixed(2)}'
+                              : 'N/A',
                           style: const pw.TextStyle(fontSize: 11),
                         ),
                       ),
@@ -352,7 +416,15 @@ class PdfGeneratorService {
   }
 
   // Build total box
-  pw.Widget _buildTotal(int total) {
+  pw.Widget _buildTotal(List<Map<String, dynamic>> items) {
+    // Calculate the total price
+    double totalPrice = items.fold<double>(0, (sum, item) {
+      if (item['price'] != null) {
+        return sum + (item['price'] * item['count']);
+      }
+      return sum;
+    });
+
     return pw.Container(
       width: double.infinity,
       padding: const pw.EdgeInsets.all(12),
@@ -368,7 +440,7 @@ class PdfGeneratorService {
             style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
           ),
           pw.Text(
-            '$total',
+            'CHF ${totalPrice.toStringAsFixed(2)}',
             style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
           ),
         ],
