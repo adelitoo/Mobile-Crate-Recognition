@@ -268,46 +268,6 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
     );
   }
 
-  // Generate PDF invoice and then navigate to home only if successful
-  Future<void> _generateInvoiceAndGoHome() async {
-    // Convert counts map to the format expected by PDF generator
-    final List<Map<String, dynamic>> itemsList =
-        counts.entries.map((entry) {
-          return {'name': entry.key, 'count': entry.value};
-        }).toList();
-
-    // Generate and save the PDF, get the result status
-    final bool success = await _pdfGenerator.generateAndSavePdf(
-      imagePath: widget.imagePath,
-      items: itemsList,
-      context: context,
-    );
-
-    // If not mounted anymore, exit
-    if (!mounted) return;
-
-    // Only proceed with success message and navigation if PDF was created successfully
-    if (success) {
-      // Show a confirmation message with styling matching the other SnackBar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Invoice generated successfully!'),
-          backgroundColor: CupertinoColors.activeGreen,
-        ),
-      );
-
-      // Navigate to home page (clearing all previous routes)
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('PDF saving interrupted!'),
-          backgroundColor: CupertinoColors.activeOrange,
-        ),
-      );
-    }
-  }
-
   // Add this function to return the emoji based on the entry.key
   String _getEmojiForItem(String item) {
     if (item.toLowerCase().contains('birra')) {
@@ -880,9 +840,6 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                           SizedBox(height: 20),
                           Expanded(
                             child: ListView.builder(
-                              padding: EdgeInsets.only(
-                                bottom: counts.isNotEmpty ? 130 : 0,
-                              ),
                               itemCount: counts.length,
                               itemBuilder: (context, index) {
                                 final entry = counts.entries.elementAt(index);
