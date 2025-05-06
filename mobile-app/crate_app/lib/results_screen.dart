@@ -132,7 +132,7 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
           );
 
           final nearestResponse = await http.get(
-            Uri.parse('http://192.168.1.123:5000/nearest_client').replace(
+            Uri.parse('http://192.168.1.27:5000/nearest_client').replace(
               queryParameters: {
                 'lat': position.latitude.toString(),
                 'lon': position.longitude.toString(),
@@ -270,9 +270,9 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
 
   // Add this function to return the emoji based on the entry.key
   String _getEmojiForItem(String item) {
-    if (item.toLowerCase().contains('keg')) {
+    if (item.toLowerCase().contains('birra')) {
       return '🍺'; // Beer keg emoji
-    } else if (item.toLowerCase().contains('bottle')) {
+    } else if (item.toLowerCase().contains('acqua')) {
       return '💧'; // Water bottle emoji
     } else {
       return '📦'; // Default to crates emoji for other items
