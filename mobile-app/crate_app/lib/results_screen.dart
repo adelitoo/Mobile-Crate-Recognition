@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'services/pdf_generator.dart';
 import 'package:crate_app/home_screen.dart';
 import 'package:geolocator/geolocator.dart';
+import 'config/app_config.dart';
 
 class DisplayPictureScreen extends StatefulWidget {
   final String imagePath;
@@ -32,7 +33,7 @@ Future<void> sendImageToBackend(
 ) async {
   var request = http.MultipartRequest(
     'POST',
-    Uri.parse('http://192.168.1.27:5000/upload'),
+    Uri.parse(AppConfig.uploadEndpoint),
   );
 
   request.files.add(await http.MultipartFile.fromPath('image', imagePath));
@@ -114,7 +115,7 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
   Future<void> _loadClients() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.27:5000/clients'),
+        Uri.parse(AppConfig.clientsEndpoint),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -132,7 +133,7 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
           );
 
           final nearestResponse = await http.get(
-            Uri.parse('http://192.168.1.27:5000/nearest_client').replace(
+            Uri.parse(AppConfig.nearestClientEndpoint).replace(
               queryParameters: {
                 'lat': position.latitude.toString(),
                 'lon': position.longitude.toString(),
