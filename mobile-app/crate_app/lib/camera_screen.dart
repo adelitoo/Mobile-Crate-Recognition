@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 class TakePictureScreen extends StatefulWidget {
   const TakePictureScreen({
-    super.key, 
+    super.key,
     required this.camera,
     required this.username,
   });

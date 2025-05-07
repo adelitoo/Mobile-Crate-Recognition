@@ -4,39 +4,38 @@ import 'package:bcrypt/bcrypt.dart';
 import '../config/app_config.dart';
 
 class SqlAuthService {
+  final http.Client client;
+
+  SqlAuthService({http.Client? client}) : client = client ?? http.Client();
+
   Future<List<String>> getEmployees() async {
     try {
-      final response = await http.get(
+      final response = await client.get(
         Uri.parse(AppConfig.employeesEndpoint),
         headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        // The backend returns a list of strings directly, not objects
         return data.map((employee) => employee.toString()).toList();
       } else {
         throw Exception('Failed to load employees');
       }
     } catch (e) {
-      print('Error in getEmployees: $e'); // Add this line for debugging
+      print('Error in getEmployees: $e');
       throw Exception('Error: $e');
     }
   }
 
   Future<bool> login(String username, String password) async {
     try {
-      final response = await http.post(
+      final response = await client.post(
         Uri.parse(AppConfig.loginEndpoint),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'username': username, 'password': password}),
       );
 
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        return false;
-      }
+      return response.statusCode == 200;
     } catch (e) {
       throw Exception('Error: $e');
     }

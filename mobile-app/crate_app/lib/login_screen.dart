@@ -110,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Colors.grey[700], fontSize: 16),
                 ),
                 const SizedBox(height: 25),
-                
+
                 // Employee Selection Dropdown
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
@@ -128,15 +128,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Text('Select Employee'),
                         ),
                         value: selectedEmployee,
-                        items: employees.map((String employee) {
-                          return DropdownMenuItem<String>(
-                            value: employee,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                              child: Text(employee),
-                            ),
-                          );
-                        }).toList(),
+                        items:
+                            employees.map((String employee) {
+                              return DropdownMenuItem<String>(
+                                value: employee,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12.0,
+                                  ),
+                                  child: Text(employee),
+                                ),
+                              );
+                            }).toList(),
                         onChanged: (String? newValue) {
                           setState(() {
                             selectedEmployee = newValue;
@@ -147,14 +150,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 10),
                 MyTextField(
                   controller: passwordController,
                   hintText: 'Password',
                   obscureText: true,
                 ),
-                
+
                 if (errorMessage.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -170,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                
+
                 const SizedBox(height: 25),
                 MyButton(text: "Sign In", onTap: signUserIn),
               ],
