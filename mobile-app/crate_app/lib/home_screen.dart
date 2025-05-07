@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:crate_app/login_screen.dart';
+import 'config/app_config.dart';
 
 class HomeScreen extends StatefulWidget {
   final String username;
@@ -32,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> getClientsCoordinates() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.27:5000/clients'),
+        Uri.parse(AppConfig.clientsEndpoint),
         headers: {'Content-Type': 'application/json'},
       );
 

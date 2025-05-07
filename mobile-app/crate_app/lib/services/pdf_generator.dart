@@ -54,12 +54,7 @@ class PdfGeneratorService {
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(40),
           header: (pw.Context context) {
-            return _buildHeaderComplete(
-              logoImage,
-              formattedDateTime,
-              clientName,
-              employeeName,
-            );
+            return _buildHeaderComplete(logoImage, formattedDateTime, clientName, employeeName);
           },
           build: (pw.Context context) {
             return [
@@ -113,7 +108,8 @@ class PdfGeneratorService {
               pw.SizedBox(height: 20),
 
               // Total only on the last page
-              if (isLastPage) _buildTotal(pageItems),
+              if (isLastPage)
+                _buildTotal(pageItems),
             ];
           },
         ),
@@ -123,11 +119,16 @@ class PdfGeneratorService {
     try {
       final pdfBytes = await pdf.save(); // Save the PDF as bytes
 
+      // Sanitize client name for filename (replace spaces with underscores, remove non-alphanumeric except underscore)
+      String sanitizedClientName = clientName
+          .replaceAll(RegExp(r'[^a-zA-Z0-9 ]'), '')
+          .replaceAll(' ', '_');
+
       // Use the file picker to choose the save location and pass the bytes directly
       String? filePath = await FilePicker.platform.saveFile(
         dialogTitle: 'Choose where to save the PDF',
         fileName:
-            'invoice_${now.day.toString().padLeft(2, '0')}_${now.month.toString().padLeft(2, '0')}_${now.year}-${now.hour.toString().padLeft(2, '0')}_${now.minute.toString().padLeft(2, '0')}.pdf',
+            'invoice_${sanitizedClientName}_${now.day.toString().padLeft(2, '0')}_${now.month.toString().padLeft(2, '0')}_${now.year}-${now.hour.toString().padLeft(2, '0')}_${now.minute.toString().padLeft(2, '0')}.pdf',
         type: FileType.custom,
         allowedExtensions: ['pdf'],
         bytes: pdfBytes, // Pass the required bytes
@@ -373,9 +374,9 @@ class PdfGeneratorService {
                       ),
                       child: pw.Center(
                         child: pw.Text(
-                          item['price'] != null
-                              ? 'CHF ${item['price'].toStringAsFixed(2)}'
-                              : 'N/A',
+                          item['price'] != null 
+                            ? 'CHF ${item['price'].toStringAsFixed(2)}'
+                            : 'N/A',
                           style: const pw.TextStyle(fontSize: 11),
                         ),
                       ),
@@ -399,9 +400,9 @@ class PdfGeneratorService {
                       ),
                       child: pw.Center(
                         child: pw.Text(
-                          item['price'] != null
-                              ? 'CHF ${(item['price'] * item['count']).toStringAsFixed(2)}'
-                              : 'N/A',
+                          item['price'] != null 
+                            ? 'CHF ${(item['price'] * item['count']).toStringAsFixed(2)}'
+                            : 'N/A',
                           style: const pw.TextStyle(fontSize: 11),
                         ),
                       ),
@@ -418,12 +419,15 @@ class PdfGeneratorService {
   // Build total box
   pw.Widget _buildTotal(List<Map<String, dynamic>> items) {
     // Calculate the total price
-    double totalPrice = items.fold<double>(0, (sum, item) {
-      if (item['price'] != null) {
-        return sum + (item['price'] * item['count']);
-      }
-      return sum;
-    });
+    double totalPrice = items.fold<double>(
+      0,
+      (sum, item) {
+        if (item['price'] != null) {
+          return sum + (item['price'] * item['count']);
+        }
+        return sum;
+      },
+    );
 
     return pw.Container(
       width: double.infinity,

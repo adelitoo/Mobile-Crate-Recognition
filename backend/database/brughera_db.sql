@@ -62,7 +62,7 @@ CREATE TABLE `item_prices` (
 
 LOCK TABLES `item_prices` WRITE;
 /*!40000 ALTER TABLE `item_prices` DISABLE KEYS */;
-INSERT INTO `item_prices` VALUES (1,'Perrier',15.00),(2,'San Clemente',17.00),(3,'Valser',19.00),(4,'Beer keg',10.00),(5,'Chopfab Doppelleu',20.00),(6,'Epti',20.00),(7,'Feldschlösschen Bier',20.00),(8,'Gazzose',16.00),(9,'Hacker-Pschorr',15.00),(10,'Henniez',21.00),(11,'Appenzeller Bier',14.00),(12,'Pomd\'or Suisse',14.00),(13,'Michel',17.00),(14,'Coca-Cola',14.00),(15,'Unknown red crate',19.00),(16,'Drinks',11.00),(17,'Rivella',12.00),(18,'Water bottle',10.00),(19,'Schweppes',13.00),(20,'Acqua Panna',15.00);
+INSERT INTO `item_prices` VALUES (1,'Perrier',15.00),(2,'San Clemente',17.00),(3,'Valser',19.00),(4,'Fusto di birra',10.00),(5,'Chopfab Doppelleu',20.00),(6,'Epti',20.00),(7,'Feldschlösschen Bier',20.00),(8,'Gazzose',16.00),(9,'Hacker-Pschorr',15.00),(10,'Henniez',21.00),(11,'Appenzeller Bier',14.00),(12,'Pomd\'or Suisse',14.00),(13,'Michel',17.00),(14,'Coca-Cola',14.00),(15,'Unknown red crate',19.00),(16,'Drinks',11.00),(17,'Rivella',12.00),(18,'Acqua',10.00),(19,'Schweppes',13.00),(20,'Acqua Panna',15.00);
 /*!40000 ALTER TABLE `item_prices` ENABLE KEYS */;
 UNLOCK TABLES;
 

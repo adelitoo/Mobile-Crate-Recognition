@@ -163,8 +163,31 @@ def upload_file():
         response.headers['Item-Counts'] = json.dumps(item_counts_with_prices)
         print(f"Response: {response.headers['Item-Counts']}")
         
+        # Clean up files after sending response
+        try:
+            # Delete the original uploaded file
+            if os.path.exists(image_path):
+                os.remove(image_path)
+            
+            # Delete the processed image
+            if os.path.exists(processed_image_path):
+                os.remove(processed_image_path)
+            
+            # Delete the prediction folder if it's empty
+            if os.path.exists(latest_predict_folder) and not os.listdir(latest_predict_folder):
+                os.rmdir(latest_predict_folder)
+        except Exception as e:
+            print(f"Error cleaning up files: {e}")
+        
         return response
     except Exception as e:
+        # Clean up the uploaded file in case of error
+        try:
+            if os.path.exists(image_path):
+                os.remove(image_path)
+        except Exception as cleanup_error:
+            print(f"Error cleaning up after failure: {cleanup_error}")
+            
         print(f"Error during processing: {e}")
         return jsonify({'error': 'Error processing the image'}), 500
 

@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:bcrypt/bcrypt.dart';
+import '../config/app_config.dart';
 
 class SqlAuthService {
-  final String baseUrl = 'http://192.168.1.27:5000'; // Your backend URL
-
   Future<List<String>> getEmployees() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/employees'),
+        Uri.parse(AppConfig.employeesEndpoint),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -28,7 +27,7 @@ class SqlAuthService {
   Future<bool> login(String username, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/login'),
+        Uri.parse(AppConfig.loginEndpoint),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'username': username, 'password': password}),
       );

@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'services/pdf_generator.dart';
 import 'package:crate_app/home_screen.dart';
 import 'package:geolocator/geolocator.dart';
+import 'config/app_config.dart';
 
 class DisplayPictureScreen extends StatefulWidget {
   final String imagePath;
@@ -32,7 +33,7 @@ Future<void> sendImageToBackend(
 ) async {
   var request = http.MultipartRequest(
     'POST',
-    Uri.parse('http://192.168.1.27:5000/upload'),
+    Uri.parse(AppConfig.uploadEndpoint),
   );
 
   request.files.add(await http.MultipartFile.fromPath('image', imagePath));
@@ -114,7 +115,7 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
   Future<void> _loadClients() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.27:5000/clients'),
+        Uri.parse(AppConfig.clientsEndpoint),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -132,7 +133,7 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
           );
 
           final nearestResponse = await http.get(
-            Uri.parse('http://192.168.1.27:5000/nearest_client').replace(
+            Uri.parse(AppConfig.nearestClientEndpoint).replace(
               queryParameters: {
                 'lat': position.latitude.toString(),
                 'lon': position.longitude.toString(),
@@ -266,46 +267,6 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
         builder: (context) => FullScreenImageView(imageFile: imageFile),
       ),
     );
-  }
-
-  // Generate PDF invoice and then navigate to home only if successful
-  Future<void> _generateInvoiceAndGoHome() async {
-    // Convert counts map to the format expected by PDF generator
-    final List<Map<String, dynamic>> itemsList =
-        counts.entries.map((entry) {
-          return {'name': entry.key, 'count': entry.value};
-        }).toList();
-
-    // Generate and save the PDF, get the result status
-    final bool success = await _pdfGenerator.generateAndSavePdf(
-      imagePath: widget.imagePath,
-      items: itemsList,
-      context: context,
-    );
-
-    // If not mounted anymore, exit
-    if (!mounted) return;
-
-    // Only proceed with success message and navigation if PDF was created successfully
-    if (success) {
-      // Show a confirmation message with styling matching the other SnackBar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Invoice generated successfully!'),
-          backgroundColor: CupertinoColors.activeGreen,
-        ),
-      );
-
-      // Navigate to home page (clearing all previous routes)
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('PDF saving interrupted!'),
-          backgroundColor: CupertinoColors.activeOrange,
-        ),
-      );
-    }
   }
 
   // Add this function to return the emoji based on the entry.key
