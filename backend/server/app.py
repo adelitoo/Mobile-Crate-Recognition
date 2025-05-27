@@ -14,7 +14,7 @@ CORS(app, expose_headers=['Item-Counts'])
 db_connection = mysql.connector.connect(
     host="127.0.0.1", 
     user="root",  
-    password="94vnhcURQ649451Q!", 
+    password="test1234", 
     database="inventory_db" 
 )
 db_cursor = db_connection.cursor(dictionary=True)
