@@ -75,7 +75,7 @@ python app.py
 ```bash
 mysql -u root -p
 ```
-3. Enter your MySQL root password when prompted : 94vnhcURQ649451Q!
+3. Enter your MySQL root password when prompted : test1234
 
 ## 📱 How to Use
 
